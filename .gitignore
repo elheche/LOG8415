@@ -335,4 +335,7 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# mypy-boto3-builder output
+mypy_boto3_output/
+
 # End of https://www.toptal.com/developers/gitignore/api/python,pycharm,macos,windows
