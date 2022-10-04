@@ -64,7 +64,12 @@ def set_security_group_inbound_rules(ec2: EC2Client, security_group_id: str) -> 
                  'FromPort': 22,
                  'ToPort': 22,
                  'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
-                 }
+                 },
+                {'IpProtocol': 'tcp',  # Type: HTTPS
+                 'FromPort': 443,
+                 'ToPort': 443,
+                 'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
+                 },
             ]
         )
     except Exception as e:
