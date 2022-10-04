@@ -73,10 +73,10 @@ def launch_ec2_instances(
         instance_type: Literal["m4.large", "t2.large"],
         key_name: str,
         security_groups: list[str]
-) -> None:
+) -> list[str]:
     try:
         print("Creating EC2 instances...")
-        ec2.run_instances(
+        response = ec2.run_instances(
             ImageId=image_id,
             MinCount=nbr_instances,
             MaxCount=nbr_instances,
@@ -87,30 +87,22 @@ def launch_ec2_instances(
     except Exception as e:
         print(e)
     else:
-        print("EC2 instances created successfully.")
+        ec2_instances_ids = []
+        for instance in response["Instances"]:
+            ec2_instances_ids.append(instance["InstanceId"])
+        print(f"EC2 instances created successfully.\n {ec2_instances_ids}")
+        return ec2_instances_ids
 
 
-def get_ec2_instances_ids(ec2: EC2Client, instance_type: Literal["m4.large", "t2.large"]):
-    ec2_instances_ids = []
+def wait_until_all_running(ec2: EC2Client, instance_ids: list[str]) -> None:
     try:
-        print("Getting EC2 instances ids...")
-        response = ec2.describe_instances(
-            Filters=[
-                {
-                    'Name': 'instance-state-name',
-                    'Values': ['running']
-                },
-                {
-                    'Name': 'instance-type',
-                    'Values': [instance_type]
-                }
-            ]
+        print("Waiting until all ec2 instances are running...")
+        waiter = ec2.get_waiter('instance_running')
+        waiter.wait(
+            InstanceIds=instance_ids,
+            WaiterConfig={'Delay': 10}  # wait 10s between each attempt.
         )
     except Exception as e:
         print(e)
     else:
-        for reservation in response["Reservations"]:
-            for instance in reservation["Instances"]:
-                ec2_instances_ids.append(instance["InstanceId"])
-        print(f"EC2 instances ids obtained successfully. Instance Type: {instance_type}\n {ec2_instances_ids}")
-        return ec2_instances_ids
+        print("All EC2 instances are now running.")
