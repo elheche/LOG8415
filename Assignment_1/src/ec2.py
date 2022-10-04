@@ -1,6 +1,5 @@
-from typing import Literal
-
 import boto3
+from typing import Literal
 from mypy_boto3_ec2 import EC2Client
 
 
@@ -39,13 +38,11 @@ def get_vpc_id(ec2: EC2Client) -> str:
         return vpc_id
 
 
-def create_security_group(ec2: EC2Client, vpc_id: str) -> tuple[str, str]:
-    security_group_name = 'log8415_lab1'
-
+def create_security_group(ec2: EC2Client, vpc_id: str, group_name: str) -> str:
     try:
         print("Creating security group...")
         response = ec2.create_security_group(
-            GroupName=security_group_name,
+            GroupName=group_name,
             Description='Allow SSH access to the server.',
             VpcId=vpc_id
         )
@@ -54,7 +51,7 @@ def create_security_group(ec2: EC2Client, vpc_id: str) -> tuple[str, str]:
     else:
         security_group_id = response['GroupId']
         print(f'Security group {security_group_id} created successfully.')
-        return security_group_name, security_group_id
+        return security_group_id
 
 
 def set_security_group_inbound_rules(ec2: EC2Client, security_group_id: str) -> None:
@@ -76,9 +73,7 @@ def set_security_group_inbound_rules(ec2: EC2Client, security_group_id: str) -> 
         print(f'Inbound rules successfully set for {security_group_id}')
 
 
-def create_key_pair(ec2: EC2Client) -> str:
-    key_name = 'log8415_lab1'
-
+def create_key_pair(ec2: EC2Client, key_name: str) -> None:
     try:
         print("Creating key pair...")
         with open('ec2_keypair.pem', 'w') as file:
@@ -88,11 +83,11 @@ def create_key_pair(ec2: EC2Client) -> str:
         print(e)
     else:
         print(f'Key pair {key_pair.get("KeyPairId")} created successfully.')
-        return key_name
 
 
 def launch_ec2_instances(
         ec2: EC2Client,
+        image_id: str,
         nbr_instances: int,
         instance_type: Literal["m4.large", "t2.large"],
         key_name: str,
@@ -101,7 +96,7 @@ def launch_ec2_instances(
     try:
         print("Creating EC2 instances...")
         ec2.run_instances(
-            ImageId="ami-08c40ec9ead489470",  # Ubuntu, 22.04 LTS, 64-bit (x86)
+            ImageId=image_id,
             MinCount=nbr_instances,
             MaxCount=nbr_instances,
             InstanceType=instance_type,

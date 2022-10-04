@@ -1,6 +1,7 @@
 import argparse
 from pathlib import Path
 from ec2 import *
+from constants import *
 
 
 def main() -> None:
@@ -8,7 +9,7 @@ def main() -> None:
     config_exists = Path(f"{Path.home()}/.aws/config").is_file()
 
     if credentials_exists and config_exists:
-        ec2 = create_aws_service("ec2")
+        ec2 = create_aws_service(EC2_SERVICE)
     else:
         parser = argparse.ArgumentParser(
             description=("Program that creates two clusters of virtual machines. "
@@ -25,7 +26,7 @@ def main() -> None:
         args = parser.parse_args()
 
         ec2 = create_aws_service(
-            "ec2",
+            EC2_SERVICE,
             args.AWS_REGION_NAME[0],
             args.AWS_ACCESS_KEY_ID[0],
             args.AWS_SECRET_ACCESS_KEY[0],
@@ -33,14 +34,14 @@ def main() -> None:
         )
 
     vcp_id = get_vpc_id(ec2)
-    security_group_name, security_group_id = create_security_group(ec2, vcp_id)
+    security_group_id = create_security_group(ec2, vcp_id, SECURITY_GROUP_NAME)
     set_security_group_inbound_rules(ec2, security_group_id)
-    key_name = create_key_pair(ec2)
-    CLUSTER_1_NBR_INSTANCES = 4
-    CLUSTER_2_NBR_INSTANCES = 5
+    create_key_pair(ec2, KEY_NAME)
 
-    launch_ec2_instances(ec2, CLUSTER_1_NBR_INSTANCES, "m4.large", key_name, [security_group_name])
-    launch_ec2_instances(ec2, CLUSTER_2_NBR_INSTANCES, "t2.large", key_name, [security_group_name])
+    # Cluster 1
+    launch_ec2_instances(ec2, INSTANCE_IMAGE, CLUSTER_1_NBR_INSTANCES, CLUSTER_1_INSTANCE_TYPE, KEY_NAME, [SECURITY_GROUP_NAME])
+    # Cluster 2
+    launch_ec2_instances(ec2, INSTANCE_IMAGE, CLUSTER_2_NBR_INSTANCES, CLUSTER_2_INSTANCE_TYPE, KEY_NAME, [SECURITY_GROUP_NAME])
 
 
 if __name__ == "__main__":
