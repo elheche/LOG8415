@@ -3,6 +3,7 @@ from pathlib import Path
 from init_aws_service import *
 from ec2 import *
 from constants import *
+from deploy_flask import *
 
 
 def main() -> None:
@@ -47,3 +48,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
