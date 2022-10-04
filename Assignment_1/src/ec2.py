@@ -41,3 +41,42 @@ def launch_ec2_instances(ec2: EC2Client, nbr_instances: int, instance_type: Lite
         print(e)
     else:
         print("EC2 instances created successfully.")
+
+
+def get_vpc_id(ec2: EC2Client):
+    response = ec2.describe_vpcs()
+    vpc_id = response.get('Vpcs')[0].get('VpcId')
+    return vpc_id
+
+
+def create_security_group(ec2: EC2Client, vpc_id: str) -> str:
+    try:
+        response = ec2.create_security_group(
+            GroupName='log8415_lab1',
+            Description='Allow SSH access to the server.',
+            VpcId=vpc_id
+        )
+    except Exception as e:
+        print(e)
+    else:
+        security_group_id = response['GroupId']
+        print(f'Security group {security_group_id} created successfully.')
+        return security_group_id
+
+
+def set_security_group_inbound_rules(ec2: EC2Client, security_group_id: str):
+    try:
+        ec2.authorize_security_group_ingress(
+            GroupId=security_group_id,
+            IpPermissions=[
+                {'IpProtocol': 'tcp',  # Type: SSH
+                 'FromPort': 22,
+                 'ToPort': 22,
+                 'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
+                 }
+            ]
+        )
+    except Exception as e:
+        print(e)
+    else:
+        print(f'Inbound rules successfully set for {security_group_id}')
