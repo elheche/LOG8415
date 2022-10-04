@@ -10,7 +10,7 @@ def get_vpc_id(ec2: EC2Client) -> str:
         print(e)
     else:
         vpc_id = response.get('Vpcs', [{}])[0].get('VpcId', '')
-        print("vcp id obtained successfully.")
+        print(f"vcp id obtained successfully.\n {vpc_id}")
         return vpc_id
 
 
@@ -19,7 +19,7 @@ def create_security_group(ec2: EC2Client, vpc_id: str, group_name: str) -> str:
         print("Creating security group...")
         response = ec2.create_security_group(
             GroupName=group_name,
-            Description='Allow SSH access to the server.',
+            Description='Allow SSH & HTTPS access to the server.',
             VpcId=vpc_id
         )
     except Exception as e:
@@ -88,3 +88,29 @@ def launch_ec2_instances(
         print(e)
     else:
         print("EC2 instances created successfully.")
+
+
+def get_ec2_instances_ids(ec2: EC2Client, instance_type: Literal["m4.large", "t2.large"]):
+    ec2_instances_ids = []
+    try:
+        print("Getting EC2 instances ids...")
+        response = ec2.describe_instances(
+            Filters=[
+                {
+                    'Name': 'instance-state-name',
+                    'Values': ['running']
+                },
+                {
+                    'Name': 'instance-type',
+                    'Values': [instance_type]
+                }
+            ]
+        )
+    except Exception as e:
+        print(e)
+    else:
+        for reservation in response["Reservations"]:
+            for instance in reservation["Instances"]:
+                ec2_instances_ids.append(instance["InstanceId"])
+        print(f"EC2 instances ids obtained successfully. Instance Type: {instance_type}\n {ec2_instances_ids}")
+        return ec2_instances_ids
