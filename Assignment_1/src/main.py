@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-from ec2 import create_aws_service, launch_ec2_instances
+from ec2 import *
 
 
 def main() -> None:
@@ -9,8 +9,6 @@ def main() -> None:
 
     if credentials_exists and config_exists:
         ec2 = create_aws_service("ec2")
-        launch_ec2_instances(ec2, 4, "m4.large")
-        launch_ec2_instances(ec2, 5, "t2.large")
     else:
         parser = argparse.ArgumentParser(
             description=("Program that creates two clusters of virtual machines. "
@@ -33,8 +31,16 @@ def main() -> None:
             args.AWS_SECRET_ACCESS_KEY[0],
             args.AWS_SESSION_TOKEN[0]
         )
-        launch_ec2_instances(ec2, 4, "m4.large")
-        launch_ec2_instances(ec2, 5, "t2.large")
+
+    vcp_id = get_vpc_id(ec2)
+    security_group_name, security_group_id = create_security_group(ec2, vcp_id)
+    set_security_group_inbound_rules(ec2, security_group_id)
+    key_name = create_key_pair(ec2)
+    CLUSTER_1_NBR_INSTANCES = 4
+    CLUSTER_2_NBR_INSTANCES = 5
+
+    launch_ec2_instances(ec2, CLUSTER_1_NBR_INSTANCES, "m4.large", key_name, [security_group_name])
+    launch_ec2_instances(ec2, CLUSTER_2_NBR_INSTANCES, "t2.large", key_name, [security_group_name])
 
 
 if __name__ == "__main__":

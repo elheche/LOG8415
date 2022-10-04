@@ -27,32 +27,25 @@ def create_aws_service(
         return aws_service
 
 
-def launch_ec2_instances(ec2: EC2Client, nbr_instances: int, instance_type: Literal["m4.large", "t2.large"]) -> None:
+def get_vpc_id(ec2: EC2Client) -> str:
     try:
-        print("Creating EC2 instances...")
-        ec2.run_instances(
-            ImageId="ami-08c40ec9ead489470",  # Ubuntu, 22.04 LTS, 64-bit (x86)
-            MinCount=nbr_instances,
-            MaxCount=nbr_instances,
-            InstanceType=instance_type,
-            KeyName="vockey"
-        )
+        print("Getting vcp id...")
+        response = ec2.describe_vpcs()
     except Exception as e:
         print(e)
     else:
-        print("EC2 instances created successfully.")
+        vpc_id = response.get('Vpcs', [{}])[0].get('VpcId', '')
+        print("vcp id obtained successfully.")
+        return vpc_id
 
 
-def get_vpc_id(ec2: EC2Client):
-    response = ec2.describe_vpcs()
-    vpc_id = response.get('Vpcs')[0].get('VpcId')
-    return vpc_id
+def create_security_group(ec2: EC2Client, vpc_id: str) -> tuple[str, str]:
+    security_group_name = 'log8415_lab1'
 
-
-def create_security_group(ec2: EC2Client, vpc_id: str) -> str:
     try:
+        print("Creating security group...")
         response = ec2.create_security_group(
-            GroupName='log8415_lab1',
+            GroupName=security_group_name,
             Description='Allow SSH access to the server.',
             VpcId=vpc_id
         )
@@ -61,11 +54,12 @@ def create_security_group(ec2: EC2Client, vpc_id: str) -> str:
     else:
         security_group_id = response['GroupId']
         print(f'Security group {security_group_id} created successfully.')
-        return security_group_id
+        return security_group_name, security_group_id
 
 
-def set_security_group_inbound_rules(ec2: EC2Client, security_group_id: str):
+def set_security_group_inbound_rules(ec2: EC2Client, security_group_id: str) -> None:
     try:
+        print("Setting inbound rules...")
         ec2.authorize_security_group_ingress(
             GroupId=security_group_id,
             IpPermissions=[
@@ -80,3 +74,41 @@ def set_security_group_inbound_rules(ec2: EC2Client, security_group_id: str):
         print(e)
     else:
         print(f'Inbound rules successfully set for {security_group_id}')
+
+
+def create_key_pair(ec2: EC2Client) -> str:
+    key_name = 'log8415_lab1'
+
+    try:
+        print("Creating key pair...")
+        with open('ec2_keypair.pem', 'w') as file:
+            key_pair = ec2.create_key_pair(KeyName=key_name, KeyType='rsa', KeyFormat='pem')
+            file.write(key_pair.get('KeyMaterial'))
+    except Exception as e:
+        print(e)
+    else:
+        print(f'Key pair {key_pair.get("KeyPairId")} created successfully.')
+        return key_name
+
+
+def launch_ec2_instances(
+        ec2: EC2Client,
+        nbr_instances: int,
+        instance_type: Literal["m4.large", "t2.large"],
+        key_name: str,
+        security_groups: list[str]
+) -> None:
+    try:
+        print("Creating EC2 instances...")
+        ec2.run_instances(
+            ImageId="ami-08c40ec9ead489470",  # Ubuntu, 22.04 LTS, 64-bit (x86)
+            MinCount=nbr_instances,
+            MaxCount=nbr_instances,
+            InstanceType=instance_type,
+            KeyName=key_name,
+            SecurityGroups=security_groups
+        )
+    except Exception as e:
+        print(e)
+    else:
+        print("EC2 instances created successfully.")
