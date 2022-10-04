@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 from init_aws_service import *
 from ec2 import *
+from elb import *
 from constants import *
 
 
@@ -39,10 +40,27 @@ def main() -> None:
     set_security_group_inbound_rules(ec2, security_group_id)
     create_key_pair(ec2, KEY_NAME)
 
-    # Cluster 1
+    # Create 4 instances of m4.large for Cluster 1
     launch_ec2_instances(ec2, INSTANCE_IMAGE, CLUSTER_1_NBR_INSTANCES, CLUSTER_1_INSTANCE_TYPE, KEY_NAME, [SECURITY_GROUP_NAME])
-    # Cluster 2
+    # Create 5 instances of t2.large for Cluster 2
     launch_ec2_instances(ec2, INSTANCE_IMAGE, CLUSTER_2_NBR_INSTANCES, CLUSTER_2_INSTANCE_TYPE, KEY_NAME, [SECURITY_GROUP_NAME])
+
+    elbv2 = create_aws_service("elbv2")
+
+    target_group_arn_1 = create_target_group(elbv2, "Cluster1", vcp_id)
+    target_group_arn_2 = create_target_group(elbv2, "Cluster2", vcp_id)
+
+    ec2_instances_ids_1 = get_ec2_instances_ids(ec2, "m4.large")
+    ec2_instances_ids_2 = get_ec2_instances_ids(ec2, "t2.large")
+
+    cluster_1_targets = [{"Id": ec2_instance_id, "Port": 443} for ec2_instance_id in ec2_instances_ids_1]
+    cluster_2_targets = [{"Id": ec2_instance_id, "Port": 443} for ec2_instance_id in ec2_instances_ids_2]
+
+    # TODO: Wait until ec2 instance state pass to 'running' otherwise an error is raised
+    # Register m4.large instances to Cluster1
+    register_targets(elbv2, target_group_arn_1, cluster_1_targets)
+    # Register "t2.large" instances to Cluster2
+    register_targets(elbv2, target_group_arn_2, cluster_2_targets)
 
 
 if __name__ == "__main__":
