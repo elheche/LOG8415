@@ -338,4 +338,7 @@ $RECYCLE.BIN/
 # mypy-boto3-builder output
 mypy_boto3_output/
 
+# EC2 key pair
+*.pem
+
 # End of https://www.toptal.com/developers/gitignore/api/python,pycharm,macos,windows
