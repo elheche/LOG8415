@@ -1,29 +1,5 @@
-import boto3
 from typing import Literal
 from mypy_boto3_ec2 import EC2Client
-
-
-def create_aws_service(
-        aws_service_name: Literal["ec2"],
-        aws_region_name: str = None,
-        aws_access_key_id: str = None,
-        aws_secret_access_key: str = None,
-        aws_session_token: str = None
-):
-    try:
-        print(f"Creating {aws_service_name} service...")
-        aws_service = boto3.client(
-            service_name=aws_service_name,
-            region_name=aws_region_name,
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-            aws_session_token=aws_session_token
-        )
-    except Exception as e:
-        print(e)
-    else:
-        print(f"{aws_service_name} service created successfully.")
-        return aws_service
 
 
 def get_vpc_id(ec2: EC2Client) -> str:

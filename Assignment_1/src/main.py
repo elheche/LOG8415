@@ -1,5 +1,6 @@
 import argparse
 from pathlib import Path
+from init_aws_service import *
 from ec2 import *
 from constants import *
 
