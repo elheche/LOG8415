@@ -33,3 +33,22 @@ def register_targets(elbv2: ElasticLoadBalancingv2Client, target_group_arn: str,
         print(e)
     else:
         print(f'Targets {targets} registered successfully to group target {target_group_arn}.')
+
+
+def create_application_load_balancer(elbv2: ElasticLoadBalancingv2Client, subnets: list[str], security_groups: list[str]):
+    try:
+        print("Creating application load_balancer...")
+        response = elbv2.create_load_balancer(
+            Name='log8415-lab1-elb',
+            Subnets=subnets,
+            SecurityGroups=security_groups,
+            Scheme="internet-facing",
+            Type="application",
+            IpAddressType="ipv4"
+        )
+    except Exception as e:
+        print(e)
+    else:
+        alb_arn = response['LoadBalancers'][0]['LoadBalancerArn']
+        print(f'Application load balancer {alb_arn} created successfully.')
+        return alb_arn
