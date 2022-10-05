@@ -110,3 +110,26 @@ def wait_until_all_running(ec2: EC2Client, instance_ids: list[str]) -> None:
         print(e)
     else:
         print("All EC2 instances are now running.")
+
+
+def get_subnet_ids(ec2: EC2Client, vpc_id: str, availability_zone: list[str]) -> list[str]:
+    try:
+        print("Getting subnet ids...")
+        response = ec2.describe_subnets(
+            Filters=[
+                {
+                    'Name': 'vpc-id',
+                    'Values': [vpc_id],
+                },
+                {
+                    'Name': 'availability-zone',
+                    'Values': availability_zone,
+                }
+            ]
+        )
+    except Exception as e:
+        print(e)
+    else:
+        subnet_ids = [subnet['SubnetId'] for subnet in response['Subnets']]
+        print(f"Subnet ids obtained successfully.\n {subnet_ids}")
+        return subnet_ids
