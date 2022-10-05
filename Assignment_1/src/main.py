@@ -77,6 +77,10 @@ def main() -> None:
     # Register "t2.large" instances to Cluster2
     register_targets(elbv2, target_group_arn_2, cluster_2_targets)
 
+    # Create an application load balancer
+    subnet_ids = get_subnet_ids(ec2, vcp_id, [CLUSTER_1_AVAILABILITY_ZONE, CLUSTER_2_AVAILABILITY_ZONE])
+    create_application_load_balancer(elbv2, subnet_ids, [security_group_id])
+
 
 if __name__ == "__main__":
     main()
