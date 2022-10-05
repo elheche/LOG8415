@@ -1,10 +1,10 @@
 import argparse
 from pathlib import Path
-from init_aws_service import *
+
+from constants import *
 from ec2 import *
 from elb import *
-from constants import *
-from deploy_flask import *
+from init_aws_service import *
 
 
 def main() -> None:
@@ -57,8 +57,8 @@ def main() -> None:
     target_group_arn_1 = create_target_group(elbv2, "Cluster1", vcp_id)
     target_group_arn_2 = create_target_group(elbv2, "Cluster2", vcp_id)
 
-    cluster_1_targets = [{"Id": ec2_instance_id, "Port": 443} for ec2_instance_id in ec2_instance_ids_1]
-    cluster_2_targets = [{"Id": ec2_instance_id, "Port": 443} for ec2_instance_id in ec2_instance_ids_2]
+    cluster_1_targets = [{"Id": ec2_instance_id, "Port": 80} for ec2_instance_id in ec2_instance_ids_1]
+    cluster_2_targets = [{"Id": ec2_instance_id, "Port": 80} for ec2_instance_id in ec2_instance_ids_2]
 
     # Register m4.large instances to Cluster1
     register_targets(elbv2, target_group_arn_1, cluster_1_targets)

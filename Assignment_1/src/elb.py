@@ -6,11 +6,11 @@ def create_target_group(elbv2: ElasticLoadBalancingv2Client, target_group_name: 
         print("Creating target group...")
         response = elbv2.create_target_group(
             Name=target_group_name,
-            Protocol="HTTPS",
+            Protocol="HTTP",
             ProtocolVersion="HTTP1",
-            Port=443,
+            Port=80,
             VpcId=vpc_id,
-            HealthCheckProtocol="HTTPS",
+            HealthCheckProtocol="HTTP",
             TargetType='instance',
             IpAddressType='ipv4'
         )

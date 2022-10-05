@@ -19,7 +19,7 @@ def create_security_group(ec2: EC2Client, vpc_id: str, group_name: str) -> str:
         print("Creating security group...")
         response = ec2.create_security_group(
             GroupName=group_name,
-            Description='Allow SSH & HTTPS access to the server.',
+            Description='Allow SSH & HTTP access to the server.',
             VpcId=vpc_id
         )
     except Exception as e:
@@ -41,9 +41,9 @@ def set_security_group_inbound_rules(ec2: EC2Client, security_group_id: str) -> 
                  'ToPort': 22,
                  'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
                  },
-                {'IpProtocol': 'tcp',  # Type: HTTPS
-                 'FromPort': 443,
-                 'ToPort': 443,
+                {'IpProtocol': 'tcp',  # Type: HTTP
+                 'FromPort': 80,
+                 'ToPort': 80,
                  'IpRanges': [{'CidrIp': '0.0.0.0/0'}]
                  },
             ]
