@@ -42,12 +42,24 @@ def main() -> None:
     create_key_pair(ec2, KEY_NAME)
 
     # Create 4 instances of m4.large for Cluster 1
-    ec2_instance_ids_1 = \
-        launch_ec2_instances(ec2, INSTANCE_IMAGE, CLUSTER_1_NBR_INSTANCES, CLUSTER_1_INSTANCE_TYPE, KEY_NAME, [SECURITY_GROUP_NAME])
+    ec2_instance_ids_1 = launch_ec2_instances(
+        ec2, INSTANCE_IMAGE,
+        CLUSTER_1_NBR_INSTANCES,
+        CLUSTER_1_INSTANCE_TYPE,
+        KEY_NAME,
+        [SECURITY_GROUP_NAME],
+        CLUSTER_1_AVAILABILITY_ZONE)
 
     # Create 5 instances of t2.large for Cluster 2
-    ec2_instance_ids_2 = \
-        launch_ec2_instances(ec2, INSTANCE_IMAGE, CLUSTER_2_NBR_INSTANCES, CLUSTER_2_INSTANCE_TYPE, KEY_NAME, [SECURITY_GROUP_NAME])
+    ec2_instance_ids_2 = launch_ec2_instances(
+        ec2,
+        INSTANCE_IMAGE,
+        CLUSTER_2_NBR_INSTANCES,
+        CLUSTER_2_INSTANCE_TYPE,
+        KEY_NAME,
+        [SECURITY_GROUP_NAME],
+        CLUSTER_2_AVAILABILITY_ZONE
+    )
 
     # Wait until all ec2 instance states pass to 'running'
     wait_until_all_running(ec2, ec2_instance_ids_1 + ec2_instance_ids_2)

@@ -72,7 +72,8 @@ def launch_ec2_instances(
         nbr_instances: int,
         instance_type: Literal["m4.large", "t2.large"],
         key_name: str,
-        security_groups: list[str]
+        security_groups: list[str],
+        availability_zone: Literal['us-east-1a', 'us-east-1b']
 ) -> list[str]:
     try:
         print("Creating EC2 instances...")
@@ -82,7 +83,10 @@ def launch_ec2_instances(
             MaxCount=nbr_instances,
             InstanceType=instance_type,
             KeyName=key_name,
-            SecurityGroups=security_groups
+            SecurityGroups=security_groups,
+            Placement={
+                'AvailabilityZone': availability_zone
+            }
         )
     except Exception as e:
         print(e)
