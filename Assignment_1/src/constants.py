@@ -1,17 +1,35 @@
-EC2_SERVICE = "ec2"
-ELB_SERVICE = "elbv2"
-SECURITY_GROUP_NAME = "log8415_lab1_sg"
-KEY_NAME = "log8415_lab1_kp"
-INSTANCE_IMAGE = "ami-08c40ec9ead489470"  # Ubuntu, 22.04 LTS, 64-bit (x86)
-CLUSTER_1_NBR_INSTANCES = 4
-CLUSTER_2_NBR_INSTANCES = 5
-CLUSTER_1_INSTANCE_TYPE = "m4.large"
-CLUSTER_2_INSTANCE_TYPE = "t2.large"
-CLUSTER_1_AVAILABILITY_ZONE = 'us-east-1a'
-CLUSTER_2_AVAILABILITY_ZONE = 'us-east-1b'
-CLUSTER_1_TARGET_GROUP_NAME = "Cluster1"
-CLUSTER_2_TARGET_GROUP_NAME = "Cluster2"
-CLUSTER_1_PATH_PATTERN = '/cluster1/*'
-CLUSTER_2_PATH_PATTERN = '/cluster2/*'
-CLUSTER_1_PRIORITY = 1
-CLUSTER_2_PRIORITY = 2
+EC2_CONFIG = {
+    'Common': {
+        'ServiceName': 'ec2',
+        'ImageId': 'ami-08c40ec9ead489470',  # Ubuntu, 22.04 LTS, 64-bit (x86)
+        'KeyPairName': 'log8415_lab1_kp',
+        'SecurityGroups': ['log8415_lab1_sg'],
+    },
+    'Cluster1': {
+        'InstanceCount': 4,
+        'InstanceType': 'm4.large',
+        'AvailabilityZone': 'us-east-1a'
+    },
+    'Cluster2': {
+        'InstanceCount': 5,
+        'InstanceType': 't2.large',
+        'AvailabilityZone': 'us-east-1b'
+    }
+}
+
+ELB_V2_CONFIG = {
+    'Common': {
+        'ServiceName': 'elbv2',
+        'SecurityGroups': ['log8415_lab1_sg']
+    },
+    'Cluster1': {
+        'TargetGroupName': 'Cluster1',
+        'PathPattern': '/cluster1/*',
+        'RulePriority': 1
+    },
+    'Cluster2': {
+        'TargetGroupName': 'Cluster2',
+        'PathPattern': '/cluster2/*',
+        'RulePriority': 2
+    }
+}

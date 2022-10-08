@@ -1,22 +1,21 @@
-from typing import Literal
 from mypy_boto3_ec2 import EC2Client
 
 
 def get_vpc_id(ec2: EC2Client) -> str:
     try:
-        print("Getting vpc id...")
+        print('Getting vpc id...')
         response = ec2.describe_vpcs()
     except Exception as e:
         print(e)
     else:
         vpc_id = response.get('Vpcs', [{}])[0].get('VpcId', '')
-        print(f"vpc id obtained successfully.\n {vpc_id}")
+        print(f'vpc id obtained successfully.\n {vpc_id}')
         return vpc_id
 
 
 def create_security_group(ec2: EC2Client, vpc_id: str, group_name: str) -> str:
     try:
-        print("Creating security group...")
+        print('Creating security group...')
         response = ec2.create_security_group(
             GroupName=group_name,
             Description='Allow SSH & HTTP access to the server.',
@@ -32,7 +31,7 @@ def create_security_group(ec2: EC2Client, vpc_id: str, group_name: str) -> str:
 
 def set_security_group_inbound_rules(ec2: EC2Client, security_group_id: str) -> None:
     try:
-        print("Setting inbound rules...")
+        print('Setting inbound rules...')
         ec2.authorize_security_group_ingress(
             GroupId=security_group_id,
             IpPermissions=[
@@ -56,53 +55,45 @@ def set_security_group_inbound_rules(ec2: EC2Client, security_group_id: str) -> 
 
 def create_key_pair(ec2: EC2Client, key_name: str) -> str:
     try:
-        print("Creating key pair...")
+        print('Creating key pair...')
         with open('ec2_keypair.pem', 'w') as file:
             key_pair = ec2.create_key_pair(KeyName=key_name, KeyType='rsa', KeyFormat='pem')
             file.write(key_pair.get('KeyMaterial'))
     except Exception as e:
         print(e)
     else:
-        key_pair_id = key_pair.get("KeyPairId")
+        key_pair_id = key_pair.get('KeyPairId')
         print(f'Key pair {key_pair.get("KeyPairId")} created successfully.')
         return key_pair_id
 
 
-def launch_ec2_instances(
-        ec2: EC2Client,
-        image_id: str,
-        nbr_instances: int,
-        instance_type: Literal["m4.large", "t2.large"],
-        key_name: str,
-        security_groups: list[str],
-        availability_zone: Literal['us-east-1a', 'us-east-1b']
-) -> list[str]:
+def launch_ec2_instances(ec2: EC2Client, ec2_config: dict) -> list[str]:
     try:
-        print("Creating EC2 instances...")
+        print('Creating EC2 instances...')
         response = ec2.run_instances(
-            ImageId=image_id,
-            MinCount=nbr_instances,
-            MaxCount=nbr_instances,
-            InstanceType=instance_type,
-            KeyName=key_name,
-            SecurityGroups=security_groups,
+            ImageId=ec2_config['ImageId'],
+            MinCount=ec2_config['InstanceCount'],
+            MaxCount=ec2_config['InstanceCount'],
+            InstanceType=ec2_config['InstanceType'],
+            KeyName=ec2_config['KeyPairName'],
+            SecurityGroups=ec2_config['SecurityGroups'],
             Placement={
-                'AvailabilityZone': availability_zone
+                'AvailabilityZone': ec2_config['AvailabilityZone']
             }
         )
     except Exception as e:
         print(e)
     else:
         ec2_instances_ids = []
-        for instance in response["Instances"]:
-            ec2_instances_ids.append(instance["InstanceId"])
-        print(f"EC2 instances created successfully.\n {ec2_instances_ids}")
+        for instance in response['Instances']:
+            ec2_instances_ids.append(instance['InstanceId'])
+        print(f'EC2 instances created successfully.\n {ec2_instances_ids}')
         return ec2_instances_ids
 
 
 def wait_until_all_running(ec2: EC2Client, instance_ids: list[str]) -> None:
     try:
-        print("Waiting until all ec2 instances are running...")
+        print('Waiting until all ec2 instances are running...')
         waiter = ec2.get_waiter('instance_running')
         waiter.wait(
             InstanceIds=instance_ids,
@@ -111,12 +102,12 @@ def wait_until_all_running(ec2: EC2Client, instance_ids: list[str]) -> None:
     except Exception as e:
         print(e)
     else:
-        print("All EC2 instances are now running.")
+        print('All EC2 instances are now running.')
 
 
 def get_subnet_ids(ec2: EC2Client, vpc_id: str, availability_zone: list[str]) -> list[str]:
     try:
-        print("Getting subnet ids...")
+        print('Getting subnet ids...')
         response = ec2.describe_subnets(
             Filters=[
                 {
@@ -133,7 +124,7 @@ def get_subnet_ids(ec2: EC2Client, vpc_id: str, availability_zone: list[str]) ->
         print(e)
     else:
         subnet_ids = [subnet['SubnetId'] for subnet in response['Subnets']]
-        print(f"Subnet ids obtained successfully.\n {subnet_ids}")
+        print(f'Subnet ids obtained successfully.\n {subnet_ids}')
         return subnet_ids
 
 
@@ -142,7 +133,7 @@ def terminate_ec2_instances(
         ec2_instances_ids: list[str]
 ) -> None:
     try:
-        print("Terminating EC2 instances...")
+        print('Terminating EC2 instances...')
         response = ec2.terminate_instances(
             InstanceIds=ec2_instances_ids
         )
@@ -155,7 +146,7 @@ def terminate_ec2_instances(
 
 def delete_key_pair(ec2: EC2Client, key_pair_id: str) -> None:
     try:
-        print("Deleting key pair...")
+        print('Deleting key pair...')
         response = ec2.delete_key_pair(
             KeyPairId=key_pair_id
         )
@@ -168,7 +159,7 @@ def delete_key_pair(ec2: EC2Client, key_pair_id: str) -> None:
 
 def delete_security_group(ec2: EC2Client, security_group_id: str) -> None:
     try:
-        print("Deleting security group...")
+        print('Deleting security group...')
         response = ec2.delete_security_group(
             GroupId=security_group_id
         )

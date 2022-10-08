@@ -7,14 +7,14 @@ def create_target_group(
         vpc_id: str
 ) -> str:
     try:
-        print("Creating target group...")
+        print('Creating target group...')
         response = elbv2.create_target_group(
             Name=target_group_name,
-            Protocol="HTTP",
-            ProtocolVersion="HTTP1",
+            Protocol='HTTP',
+            ProtocolVersion='HTTP1',
             Port=80,
             VpcId=vpc_id,
-            HealthCheckProtocol="HTTP",
+            HealthCheckProtocol='HTTP',
             TargetType='instance',
             IpAddressType='ipv4'
         )
@@ -29,34 +29,34 @@ def create_target_group(
 def register_targets(
         elbv2: ElasticLoadBalancingv2Client,
         target_group_arn: str,
-        targets: list[dict]
+        ec2_instance_ids: list[str]
 ) -> None:
     try:
-        print("Registering targets...")
+        print('Registering targets...')
         elbv2.register_targets(
             TargetGroupArn=target_group_arn,
-            Targets=targets
+            Targets=[{'Id': ec2_instance_id, 'Port': 80} for ec2_instance_id in ec2_instance_ids]
         )
     except Exception as e:
         print(e)
     else:
-        print(f'Targets {targets} registered successfully to group target {target_group_arn}.')
+        print(f'Targets {ec2_instance_ids} registered successfully to group target {target_group_arn}.')
 
 
 def create_application_load_balancer(
         elbv2: ElasticLoadBalancingv2Client,
         subnets: list[str],
-        security_groups: list[str]
+        security_group_ids: list[str]
 ) -> str:
     try:
-        print("Creating application load_balancer...")
+        print('Creating application load_balancer...')
         response = elbv2.create_load_balancer(
             Name='log8415-lab1-elb',
             Subnets=subnets,
-            SecurityGroups=security_groups,
-            Scheme="internet-facing",
-            Type="application",
-            IpAddressType="ipv4"
+            SecurityGroups=security_group_ids,
+            Scheme='internet-facing',
+            Type='application',
+            IpAddressType='ipv4'
         )
     except Exception as e:
         print(e)
@@ -72,10 +72,10 @@ def create_alb_listener(
         target_group_arns: list[str]
 ) -> str:
     try:
-        print("Creating alb listener...")
+        print('Creating alb listener...')
         response = elbv2.create_listener(
             LoadBalancerArn=alb_arn,
-            Protocol="HTTP",
+            Protocol='HTTP',
             Port=80,
             DefaultActions=[
                 {
@@ -111,7 +111,7 @@ def create_alb_listener_rule(
         priority: int
 ) -> str:
     try:
-        print("Creating alb listener rule...")
+        print('Creating alb listener rule...')
         response = elbv2.create_rule(
             ListenerArn=alb_listener_arn,
             Conditions=[
@@ -143,7 +143,7 @@ def delete_alb_listener_rule(
         rule_arn: str,
 ) -> None:
     try:
-        print("Deleting ALB listener rule...")
+        print('Deleting ALB listener rule...')
         response = elbv2.delete_rule(
             RuleArn=rule_arn
         )
@@ -159,7 +159,7 @@ def delete_application_load_balancer(
         load_balancer_arn: str,
 ) -> None:
     try:
-        print("Deleting application load_balancer...")
+        print('Deleting application load_balancer...')
         response = elbv2.delete_load_balancer(
             LoadBalancerArn=load_balancer_arn
         )
@@ -175,7 +175,7 @@ def delete_target_group(
         target_group_arn: str,
 ) -> None:
     try:
-        print("Deleting target group...")
+        print('Deleting target group...')
         response = elbv2.delete_target_group(
             TargetGroupArn=target_group_arn
         )
@@ -184,4 +184,3 @@ def delete_target_group(
     else:
         print(response)
         print(f'Target Group deleted successfully.')
-
