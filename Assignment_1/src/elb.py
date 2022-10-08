@@ -136,3 +136,36 @@ def create_alb_listener_rule(
         alb_listener_rule_arn = response['Rules'][0]['RuleArn']
         print(f'ALB listener rule {alb_listener_rule_arn} created successfully.')
         return alb_listener_rule_arn
+
+
+def delete_alb_listener_rule(
+        elbv2: ElasticLoadBalancingv2Client,
+        rule_arn: str,
+) -> None:
+    try:
+        print("Deleting ALB listener rule...")
+        response = elbv2.delete_rule(
+            RuleArn=rule_arn
+        )
+    except Exception as e:
+        print(e)
+    else:
+        print(response)
+        print(f'ALB listener rule deleted successfully.')
+
+
+def delete_application_load_balancer(
+        elbv2: ElasticLoadBalancingv2Client,
+        load_balancer_arn: str,
+) -> None:
+    try:
+        print("Deleting application load_balancer...")
+        response = elbv2.delete_load_balancer(
+            LoadBalancerArn=load_balancer_arn
+        )
+    except Exception as e:
+        print(e)
+    else:
+        print(response)
+        print(f'Application load balancer deleted successfully.')
+

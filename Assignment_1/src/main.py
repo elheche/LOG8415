@@ -92,10 +92,23 @@ def main() -> None:
     alb_listener_arn = create_alb_listener(elbv2, alb_arn, [target_group_arn_1, target_group_arn_2])
 
     # Create rule 1 in the last listener to forward requests to cluster 1
-    create_alb_listener_rule(elbv2, alb_listener_arn, target_group_arn_1, CLUSTER_1_PATH_PATTERN, CLUSTER_1_PRIORITY)
+    alb_listener_rule_1_arn = create_alb_listener_rule(elbv2, alb_listener_arn, target_group_arn_1,
+                                                       CLUSTER_1_PATH_PATTERN, CLUSTER_1_PRIORITY)
 
     # Create rule 2 in the last listener to forward requests to cluster 2
-    create_alb_listener_rule(elbv2, alb_listener_arn, target_group_arn_2, CLUSTER_2_PATH_PATTERN, CLUSTER_2_PRIORITY)
+    alb_listener_rule_2_arn = create_alb_listener_rule(elbv2, alb_listener_arn, target_group_arn_2,
+                                                       CLUSTER_2_PATH_PATTERN, CLUSTER_2_PRIORITY)
+
+    # Delete rule 1
+    delete_alb_listener_rule(elbv2,
+                             rule_arn=alb_listener_rule_1_arn)
+
+    # Delete rule 2
+    delete_alb_listener_rule(elbv2,
+                             rule_arn=alb_listener_rule_2_arn)
+
+    # Delete the application load balancer (this will delete the ALB listener
+    delete_application_load_balancer(elbv2, load_balancer_arn=alb_arn)
 
 
 if __name__ == "__main__":
