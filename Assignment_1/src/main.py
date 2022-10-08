@@ -1,10 +1,10 @@
 import argparse
 from pathlib import Path
-from init_aws_service import *
+
+from constants import *
 from ec2 import *
 from elb import *
-from constants import *
-from deploy_flask import *
+from init_aws_service import *
 
 
 def main() -> None:
@@ -42,12 +42,24 @@ def main() -> None:
     create_key_pair(ec2, KEY_NAME)
 
     # Create 4 instances of m4.large for Cluster 1
-    ec2_instance_ids_1 = \
-        launch_ec2_instances(ec2, INSTANCE_IMAGE, CLUSTER_1_NBR_INSTANCES, CLUSTER_1_INSTANCE_TYPE, KEY_NAME, [SECURITY_GROUP_NAME])
+    ec2_instance_ids_1 = launch_ec2_instances(
+        ec2, INSTANCE_IMAGE,
+        CLUSTER_1_NBR_INSTANCES,
+        CLUSTER_1_INSTANCE_TYPE,
+        KEY_NAME,
+        [SECURITY_GROUP_NAME],
+        CLUSTER_1_AVAILABILITY_ZONE)
 
     # Create 5 instances of t2.large for Cluster 2
-    ec2_instance_ids_2 = \
-        launch_ec2_instances(ec2, INSTANCE_IMAGE, CLUSTER_2_NBR_INSTANCES, CLUSTER_2_INSTANCE_TYPE, KEY_NAME, [SECURITY_GROUP_NAME])
+    ec2_instance_ids_2 = launch_ec2_instances(
+        ec2,
+        INSTANCE_IMAGE,
+        CLUSTER_2_NBR_INSTANCES,
+        CLUSTER_2_INSTANCE_TYPE,
+        KEY_NAME,
+        [SECURITY_GROUP_NAME],
+        CLUSTER_2_AVAILABILITY_ZONE
+    )
 
     # Wait until all ec2 instance states pass to 'running'
     wait_until_all_running(ec2, ec2_instance_ids_1 + ec2_instance_ids_2)
@@ -57,15 +69,27 @@ def main() -> None:
     target_group_arn_1 = create_target_group(elbv2, "Cluster1", vcp_id)
     target_group_arn_2 = create_target_group(elbv2, "Cluster2", vcp_id)
 
-    cluster_1_targets = [{"Id": ec2_instance_id, "Port": 443} for ec2_instance_id in ec2_instance_ids_1]
-    cluster_2_targets = [{"Id": ec2_instance_id, "Port": 443} for ec2_instance_id in ec2_instance_ids_2]
+    cluster_1_targets = [{"Id": ec2_instance_id, "Port": 80} for ec2_instance_id in ec2_instance_ids_1]
+    cluster_2_targets = [{"Id": ec2_instance_id, "Port": 80} for ec2_instance_id in ec2_instance_ids_2]
 
     # Register m4.large instances to Cluster1
     register_targets(elbv2, target_group_arn_1, cluster_1_targets)
     # Register "t2.large" instances to Cluster2
     register_targets(elbv2, target_group_arn_2, cluster_2_targets)
 
+    # Create an application load balancer
+    subnet_ids = get_subnet_ids(ec2, vcp_id, [CLUSTER_1_AVAILABILITY_ZONE, CLUSTER_2_AVAILABILITY_ZONE])
+    alb_arn = create_application_load_balancer(elbv2, subnet_ids, [security_group_id])
+
+    # Create an ALB listener
+    alb_listener_arn = create_alb_listener(elbv2, alb_arn, [target_group_arn_1, target_group_arn_2])
+
+    # Create rule 1 in the last listener to forward requests to cluster 1
+    create_alb_listener_rule(elbv2, alb_listener_arn, target_group_arn_1, '/cluster1/*', 1)
+
+    # Create rule 2 in the last listener to forward requests to cluster 2
+    create_alb_listener_rule(elbv2, alb_listener_arn, target_group_arn_2, '/cluster2/*', 2)
+
 
 if __name__ == "__main__":
     main()
-
