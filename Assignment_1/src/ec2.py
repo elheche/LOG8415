@@ -54,7 +54,7 @@ def set_security_group_inbound_rules(ec2: EC2Client, security_group_id: str) -> 
         print(f'Inbound rules successfully set for {security_group_id}')
 
 
-def create_key_pair(ec2: EC2Client, key_name: str) -> None:
+def create_key_pair(ec2: EC2Client, key_name: str) -> str:
     try:
         print("Creating key pair...")
         with open('ec2_keypair.pem', 'w') as file:
@@ -63,7 +63,9 @@ def create_key_pair(ec2: EC2Client, key_name: str) -> None:
     except Exception as e:
         print(e)
     else:
+        key_pair_id = key_pair.get("KeyPairId")
         print(f'Key pair {key_pair.get("KeyPairId")} created successfully.')
+        return key_pair_id
 
 
 def launch_ec2_instances(
@@ -133,3 +135,45 @@ def get_subnet_ids(ec2: EC2Client, vpc_id: str, availability_zone: list[str]) ->
         subnet_ids = [subnet['SubnetId'] for subnet in response['Subnets']]
         print(f"Subnet ids obtained successfully.\n {subnet_ids}")
         return subnet_ids
+
+
+def terminate_ec2_instances(
+        ec2: EC2Client,
+        ec2_instances_ids: list[str]
+) -> None:
+    try:
+        print("Terminating EC2 instances...")
+        response = ec2.terminate_instances(
+            InstanceIds=ec2_instances_ids
+        )
+    except Exception as e:
+        print(e)
+    else:
+        print(response)
+        print(f'EC2 instances terminated successfully.')
+
+
+def delete_key_pair(ec2: EC2Client, key_pair_id: str) -> None:
+    try:
+        print("Deleting key pair...")
+        response = ec2.delete_key_pair(
+            KeyPairId=key_pair_id
+        )
+    except Exception as e:
+        print(e)
+    else:
+        print(response)
+        print(f'Key pair {key_pair_id} deleted successfully.')
+
+
+def delete_security_group(ec2: EC2Client, security_group_id: str) -> None:
+    try:
+        print("Deleting security group...")
+        response = ec2.delete_security_group(
+            GroupId=security_group_id
+        )
+    except Exception as e:
+        print(e)
+    else:
+        print(response)
+        print(f'Security Group {security_group_id} deleted successfully.')
