@@ -4,3 +4,4 @@ mypy_boto3_elbv2
 # a nice package to interact with aws cli
 aws-shell
 requests
+Flask~=2.2.2
