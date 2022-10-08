@@ -12,8 +12,9 @@ def main() -> None:
     config_exists = Path(f'{Path.home()}/.aws/config').is_file()
 
     if credentials_exists and config_exists:
-        # Initialize an ec2 service with default credentials and configuration
+        # Initialize ec2, elbv2 services with default credentials and configuration
         ec2 = create_aws_service(EC2_CONFIG['Common']['ServiceName'])
+        elbv2 = create_aws_service(ELB_V2_CONFIG['Common']['ServiceName'])
     else:
         parser = argparse.ArgumentParser(
             description=('Program that creates two clusters of virtual machines. '
@@ -30,9 +31,17 @@ def main() -> None:
 
         args = parser.parse_args()
 
-        # Initialize an ec2 service with user credentials and configuration
+        # Initialize ec2, elbv2 services with user credentials and configuration
         ec2 = create_aws_service(
             EC2_CONFIG['Common']['ServiceName'],
+            args.AWS_REGION_NAME[0],
+            args.AWS_ACCESS_KEY_ID[0],
+            args.AWS_SECRET_ACCESS_KEY[0],
+            args.AWS_SESSION_TOKEN[0]
+        )
+
+        elbv2 = create_aws_service(
+            ELB_V2_CONFIG['Common']['ServiceName'],
             args.AWS_REGION_NAME[0],
             args.AWS_ACCESS_KEY_ID[0],
             args.AWS_SECRET_ACCESS_KEY[0],
@@ -45,8 +54,12 @@ def main() -> None:
 
     # TODO: Do we need to create a VPC specific to this assignment or using the default one ?
     vpc_id = get_vpc_id(ec2)
+
+    # Create a security group and set its inbound rules to accept HTTP and SSH connections
     security_group_id = create_security_group(ec2, vpc_id, EC2_CONFIG['Common']['SecurityGroups'][0])
     set_security_group_inbound_rules(ec2, security_group_id)
+
+    # Create a key pair
     key_pair_id = create_key_pair(ec2, EC2_CONFIG['Common']['KeyPairName'])
 
     # Create 4 instances of m4.large for Cluster 1
@@ -57,9 +70,6 @@ def main() -> None:
 
     # Wait until all ec2 instance states pass to 'running'
     wait_until_all_running(ec2, ec2_instance_ids_1 + ec2_instance_ids_2)
-
-    # TODO: Check if elbv2 needs credentials to be initialized
-    elbv2 = create_aws_service(ELB_V2_CONFIG['Common']['ServiceName'])
 
     # Create two target groups: Cluster1 and Cluster2
     target_group_arn_1 = create_target_group(elbv2, ELB_V2_CONFIG['Cluster1']['TargetGroupName'], vpc_id)
