@@ -42,73 +42,79 @@ def main() -> None:
         )
 
     # TODO: Do we need to create a VPC specific to this assignment or using the default one
-    vpc_id = get_vpc_id(ec2)
-    security_group_id = create_security_group(ec2, vpc_id, SECURITY_GROUP_NAME)
-    set_security_group_inbound_rules(ec2, security_group_id)
-    create_key_pair(ec2, KEY_NAME)
-
-    # Create 4 instances of m4.large for Cluster 1
-    ec2_instance_ids_1 = launch_ec2_instances(
-        ec2,
-        INSTANCE_IMAGE,
-        CLUSTER_1_NBR_INSTANCES,
-        CLUSTER_1_INSTANCE_TYPE,
-        KEY_NAME,
-        [SECURITY_GROUP_NAME],
-        CLUSTER_1_AVAILABILITY_ZONE)
-
-    # Create 5 instances of t2.large for Cluster 2
-    ec2_instance_ids_2 = launch_ec2_instances(
-        ec2,
-        INSTANCE_IMAGE,
-        CLUSTER_2_NBR_INSTANCES,
-        CLUSTER_2_INSTANCE_TYPE,
-        KEY_NAME,
-        [SECURITY_GROUP_NAME],
-        CLUSTER_2_AVAILABILITY_ZONE
-    )
-
-    # Wait until all ec2 instance states pass to 'running'
-    wait_until_all_running(ec2, ec2_instance_ids_1 + ec2_instance_ids_2)
+    # vpc_id = get_vpc_id(ec2)
+    # security_group_id = create_security_group(ec2, vpc_id, SECURITY_GROUP_NAME)
+    # set_security_group_inbound_rules(ec2, security_group_id)
+    # create_key_pair(ec2, KEY_NAME)
+    #
+    # # Create 4 instances of m4.large for Cluster 1
+    # ec2_instance_ids_1 = launch_ec2_instances(
+    #     ec2,
+    #     INSTANCE_IMAGE,
+    #     CLUSTER_1_NBR_INSTANCES,
+    #     CLUSTER_1_INSTANCE_TYPE,
+    #     KEY_NAME,
+    #     [SECURITY_GROUP_NAME],
+    #     CLUSTER_1_AVAILABILITY_ZONE)
+    #
+    # # Create 5 instances of t2.large for Cluster 2
+    # ec2_instance_ids_2 = launch_ec2_instances(
+    #     ec2,
+    #     INSTANCE_IMAGE,
+    #     CLUSTER_2_NBR_INSTANCES,
+    #     CLUSTER_2_INSTANCE_TYPE,
+    #     KEY_NAME,
+    #     [SECURITY_GROUP_NAME],
+    #     CLUSTER_2_AVAILABILITY_ZONE
+    # )
+    #
+    # # Wait until all ec2 instance states pass to 'running'
+    # wait_until_all_running(ec2, ec2_instance_ids_1 + ec2_instance_ids_2)
 
     elbv2 = create_aws_service(ELB_SERVICE)
 
-    target_group_arn_1 = create_target_group(elbv2, CLUSTER_1_TARGET_GROUP_NAME, vpc_id)
-    target_group_arn_2 = create_target_group(elbv2, CLUSTER_2_TARGET_GROUP_NAME, vpc_id)
+    # target_group_arn_1 = create_target_group(elbv2, CLUSTER_1_TARGET_GROUP_NAME, vpc_id)
+    # target_group_arn_2 = create_target_group(elbv2, CLUSTER_2_TARGET_GROUP_NAME, vpc_id)
+    #
+    # cluster_1_targets = [{"Id": ec2_instance_id, "Port": 80} for ec2_instance_id in ec2_instance_ids_1]
+    # cluster_2_targets = [{"Id": ec2_instance_id, "Port": 80} for ec2_instance_id in ec2_instance_ids_2]
+    #
+    # # Register m4.large instances to Cluster1
+    # register_targets(elbv2, target_group_arn_1, cluster_1_targets)
+    # # Register "t2.large" instances to Cluster2
+    # register_targets(elbv2, target_group_arn_2, cluster_2_targets)
+    #
+    # # Create an application load balancer
+    # subnet_ids = get_subnet_ids(ec2, vpc_id, [CLUSTER_1_AVAILABILITY_ZONE, CLUSTER_2_AVAILABILITY_ZONE])
+    # alb_arn = create_application_load_balancer(elbv2, subnet_ids, [security_group_id])
+    #
+    # # Create an ALB listener
+    # alb_listener_arn = create_alb_listener(elbv2, alb_arn, [target_group_arn_1, target_group_arn_2])
+    #
+    # # Create rule 1 in the last listener to forward requests to cluster 1
+    # alb_listener_rule_1_arn = create_alb_listener_rule(elbv2, alb_listener_arn, target_group_arn_1,
+    #                                                    CLUSTER_1_PATH_PATTERN, CLUSTER_1_PRIORITY)
+    #
+    # # Create rule 2 in the last listener to forward requests to cluster 2
+    # alb_listener_rule_2_arn = create_alb_listener_rule(elbv2, alb_listener_arn, target_group_arn_2,
+    #                                                    CLUSTER_2_PATH_PATTERN, CLUSTER_2_PRIORITY)
+    #
+    # # Delete rule 1
+    # delete_alb_listener_rule(elbv2,
+    #                          rule_arn=alb_listener_rule_1_arn)
+    #
+    # # Delete rule 2
+    # delete_alb_listener_rule(elbv2,
+    #                          rule_arn=alb_listener_rule_2_arn)
+    #
+    # # Delete the application load balancer (this will delete the ALB listener
+    # delete_application_load_balancer(elbv2, load_balancer_arn=alb_arn)
 
-    cluster_1_targets = [{"Id": ec2_instance_id, "Port": 80} for ec2_instance_id in ec2_instance_ids_1]
-    cluster_2_targets = [{"Id": ec2_instance_id, "Port": 80} for ec2_instance_id in ec2_instance_ids_2]
+    # Delete Target Group 1
+    delete_target_group(elbv2, target_group_arn='arn:aws:elasticloadbalancing:us-east-1:971294773415:targetgroup/Cluster1/f22faf90281256fb')
 
-    # Register m4.large instances to Cluster1
-    register_targets(elbv2, target_group_arn_1, cluster_1_targets)
-    # Register "t2.large" instances to Cluster2
-    register_targets(elbv2, target_group_arn_2, cluster_2_targets)
-
-    # Create an application load balancer
-    subnet_ids = get_subnet_ids(ec2, vpc_id, [CLUSTER_1_AVAILABILITY_ZONE, CLUSTER_2_AVAILABILITY_ZONE])
-    alb_arn = create_application_load_balancer(elbv2, subnet_ids, [security_group_id])
-
-    # Create an ALB listener
-    alb_listener_arn = create_alb_listener(elbv2, alb_arn, [target_group_arn_1, target_group_arn_2])
-
-    # Create rule 1 in the last listener to forward requests to cluster 1
-    alb_listener_rule_1_arn = create_alb_listener_rule(elbv2, alb_listener_arn, target_group_arn_1,
-                                                       CLUSTER_1_PATH_PATTERN, CLUSTER_1_PRIORITY)
-
-    # Create rule 2 in the last listener to forward requests to cluster 2
-    alb_listener_rule_2_arn = create_alb_listener_rule(elbv2, alb_listener_arn, target_group_arn_2,
-                                                       CLUSTER_2_PATH_PATTERN, CLUSTER_2_PRIORITY)
-
-    # Delete rule 1
-    delete_alb_listener_rule(elbv2,
-                             rule_arn=alb_listener_rule_1_arn)
-
-    # Delete rule 2
-    delete_alb_listener_rule(elbv2,
-                             rule_arn=alb_listener_rule_2_arn)
-
-    # Delete the application load balancer (this will delete the ALB listener
-    delete_application_load_balancer(elbv2, load_balancer_arn=alb_arn)
+    # Delete Target Group 2
+    delete_target_group(elbv2, target_group_arn='arn:aws:elasticloadbalancing:us-east-1:971294773415:targetgroup/Cluster2/228463fcf4e48f0f')
 
 
 if __name__ == "__main__":

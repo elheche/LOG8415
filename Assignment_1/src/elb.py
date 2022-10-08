@@ -169,3 +169,19 @@ def delete_application_load_balancer(
         print(response)
         print(f'Application load balancer deleted successfully.')
 
+
+def delete_target_group(
+        elbv2: ElasticLoadBalancingv2Client,
+        target_group_arn: str,
+) -> None:
+    try:
+        print("Deleting target group...")
+        response = elbv2.delete_target_group(
+            TargetGroupArn=target_group_arn
+        )
+    except Exception as e:
+        print(e)
+    else:
+        print(response)
+        print(f'Target Group deleted successfully.')
+
