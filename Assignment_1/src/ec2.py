@@ -4,13 +4,13 @@ from mypy_boto3_ec2 import EC2Client
 
 def get_vpc_id(ec2: EC2Client) -> str:
     try:
-        print("Getting vcp id...")
+        print("Getting vpc id...")
         response = ec2.describe_vpcs()
     except Exception as e:
         print(e)
     else:
         vpc_id = response.get('Vpcs', [{}])[0].get('VpcId', '')
-        print(f"vcp id obtained successfully.\n {vpc_id}")
+        print(f"vpc id obtained successfully.\n {vpc_id}")
         return vpc_id
 
 

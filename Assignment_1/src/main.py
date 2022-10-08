@@ -18,13 +18,18 @@ def main() -> None:
             description=("Program that creates two clusters of virtual machines. "
                          "It first looks for credentials and configuration files provided by your AWS CLI "
                          "(You can configure your AWS CLI using this command: <aws configure>). "
-                         "If not found, it offers you the option to manually enter their values using the arguments below:"
+                         "If not found, it offers you the option to manually enter their values using "
+                         "the arguments below:"
                          )
         )
-        parser.add_argument("-r", help="The region name for your AWS account.", dest="AWS_REGION_NAME", required=True, nargs=1)
-        parser.add_argument("-i", help="The access key for your AWS account.", dest="AWS_ACCESS_KEY_ID", required=True, nargs=1)
-        parser.add_argument("-s", help="The secret key for your AWS account.", dest="AWS_SECRET_ACCESS_KEY", required=True, nargs=1)
-        parser.add_argument("-t", help="The session key for your AWS account.", dest="AWS_SESSION_TOKEN", required=True, nargs=1)
+        parser.add_argument("-r", help="The region name for your AWS account.", dest="AWS_REGION_NAME",
+                            required=True, nargs=1)
+        parser.add_argument("-i", help="The access key for your AWS account.", dest="AWS_ACCESS_KEY_ID",
+                            required=True, nargs=1)
+        parser.add_argument("-s", help="The secret key for your AWS account.", dest="AWS_SECRET_ACCESS_KEY",
+                            required=True, nargs=1)
+        parser.add_argument("-t", help="The session key for your AWS account.", dest="AWS_SESSION_TOKEN",
+                            required=True, nargs=1)
 
         args = parser.parse_args()
 
@@ -36,14 +41,16 @@ def main() -> None:
             args.AWS_SESSION_TOKEN[0]
         )
 
-    vcp_id = get_vpc_id(ec2)
-    security_group_id = create_security_group(ec2, vcp_id, SECURITY_GROUP_NAME)
+    # TODO: Do we need to create a VPC specific to this assignment or using the default one
+    vpc_id = get_vpc_id(ec2)
+    security_group_id = create_security_group(ec2, vpc_id, SECURITY_GROUP_NAME)
     set_security_group_inbound_rules(ec2, security_group_id)
     create_key_pair(ec2, KEY_NAME)
 
     # Create 4 instances of m4.large for Cluster 1
     ec2_instance_ids_1 = launch_ec2_instances(
-        ec2, INSTANCE_IMAGE,
+        ec2,
+        INSTANCE_IMAGE,
         CLUSTER_1_NBR_INSTANCES,
         CLUSTER_1_INSTANCE_TYPE,
         KEY_NAME,
@@ -64,10 +71,10 @@ def main() -> None:
     # Wait until all ec2 instance states pass to 'running'
     wait_until_all_running(ec2, ec2_instance_ids_1 + ec2_instance_ids_2)
 
-    elbv2 = create_aws_service("elbv2")
+    elbv2 = create_aws_service(ELB_SERVICE)
 
-    target_group_arn_1 = create_target_group(elbv2, "Cluster1", vcp_id)
-    target_group_arn_2 = create_target_group(elbv2, "Cluster2", vcp_id)
+    target_group_arn_1 = create_target_group(elbv2, CLUSTER_1_TARGET_GROUP_NAME, vpc_id)
+    target_group_arn_2 = create_target_group(elbv2, CLUSTER_2_TARGET_GROUP_NAME, vpc_id)
 
     cluster_1_targets = [{"Id": ec2_instance_id, "Port": 80} for ec2_instance_id in ec2_instance_ids_1]
     cluster_2_targets = [{"Id": ec2_instance_id, "Port": 80} for ec2_instance_id in ec2_instance_ids_2]
@@ -78,17 +85,17 @@ def main() -> None:
     register_targets(elbv2, target_group_arn_2, cluster_2_targets)
 
     # Create an application load balancer
-    subnet_ids = get_subnet_ids(ec2, vcp_id, [CLUSTER_1_AVAILABILITY_ZONE, CLUSTER_2_AVAILABILITY_ZONE])
+    subnet_ids = get_subnet_ids(ec2, vpc_id, [CLUSTER_1_AVAILABILITY_ZONE, CLUSTER_2_AVAILABILITY_ZONE])
     alb_arn = create_application_load_balancer(elbv2, subnet_ids, [security_group_id])
 
     # Create an ALB listener
     alb_listener_arn = create_alb_listener(elbv2, alb_arn, [target_group_arn_1, target_group_arn_2])
 
     # Create rule 1 in the last listener to forward requests to cluster 1
-    create_alb_listener_rule(elbv2, alb_listener_arn, target_group_arn_1, '/cluster1/*', 1)
+    create_alb_listener_rule(elbv2, alb_listener_arn, target_group_arn_1, CLUSTER_1_PATH_PATTERN, CLUSTER_1_PRIORITY)
 
     # Create rule 2 in the last listener to forward requests to cluster 2
-    create_alb_listener_rule(elbv2, alb_listener_arn, target_group_arn_2, '/cluster2/*', 2)
+    create_alb_listener_rule(elbv2, alb_listener_arn, target_group_arn_2, CLUSTER_2_PATH_PATTERN, CLUSTER_2_PRIORITY)
 
 
 if __name__ == "__main__":
