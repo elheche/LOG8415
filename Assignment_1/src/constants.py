@@ -8,12 +8,24 @@ EC2_CONFIG = {
     'Cluster1': {
         'InstanceCount': 4,
         'InstanceType': 'm4.large',
-        'AvailabilityZone': 'us-east-1a'
+        'AvailabilityZone': 'us-east-1a',
+        'TagSpecifications': [
+            {
+                'ResourceType': 'instance',
+                'Tags': [{'Key': 'Cluster', 'Value': '1', }]
+            }
+        ]
     },
     'Cluster2': {
         'InstanceCount': 5,
         'InstanceType': 't2.large',
-        'AvailabilityZone': 'us-east-1b'
+        'AvailabilityZone': 'us-east-1b',
+        'TagSpecifications': [
+            {
+                'ResourceType': 'instance',
+                'Tags': [{'Key': 'Cluster', 'Value': '2', }]
+            }
+        ]
     }
 }
 

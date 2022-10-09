@@ -79,7 +79,8 @@ def launch_ec2_instances(ec2: EC2Client, ec2_config: dict) -> list[str]:
             SecurityGroups=ec2_config['SecurityGroups'],
             Placement={
                 'AvailabilityZone': ec2_config['AvailabilityZone']
-            }
+            },
+            TagSpecifications=ec2_config['TagSpecifications']
         )
     except Exception as e:
         print(e)
