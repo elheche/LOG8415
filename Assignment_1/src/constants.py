@@ -59,6 +59,13 @@ CODE_DEPLOY_CONFIG = {
             'deploymentType': 'IN_PLACE',
             'deploymentOption': 'WITHOUT_TRAFFIC_CONTROL'
         },
+        'Revision': {
+            'revisionType': 'GitHub',
+            'gitHubLocation': {
+                'repository': 'elheche/LOG8415',
+                'commitId': 'b2da0fc407b433f4be1ec1ac35ef1cd7de20a169'  # To be updated when a new version of the server is pushed
+            }
+        }
     },
     'Cluster1': {
         'DeploymentGroupName': 'Cluster1',
