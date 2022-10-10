@@ -45,3 +45,39 @@ ELB_V2_CONFIG = {
         'RulePriority': 2
     }
 }
+
+CODE_DEPLOY_CONFIG = {
+    'Common': {
+        'ServiceName': 'codedeploy',
+        'ApplicationName': 'log8415_lab1_app',
+        'DeploymentConfigName': 'CodeDeployDefault.OneAtATime',
+        'AutoRollbackConfiguration': {
+            'enabled': True,
+            'events': ['DEPLOYMENT_FAILURE']
+        },
+        'DeploymentStyle': {
+            'deploymentType': 'IN_PLACE',
+            'deploymentOption': 'WITHOUT_TRAFFIC_CONTROL'
+        },
+    },
+    'Cluster1': {
+        'DeploymentGroupName': 'Cluster1',
+        'EC2TagFilters': [
+            {
+                'Key': 'Cluster',
+                'Value': '1',
+                'Type': 'KEY_AND_VALUE'
+            },
+        ]
+    },
+    'Cluster2': {
+        'DeploymentGroupName': 'Cluster2',
+        'EC2TagFilters': [
+            {
+                'Key': 'Cluster',
+                'Value': '2',
+                'Type': 'KEY_AND_VALUE'
+            },
+        ]
+    }
+}
