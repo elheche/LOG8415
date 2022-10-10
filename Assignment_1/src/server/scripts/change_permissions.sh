@@ -2,4 +2,4 @@
 
 DIR="/home/ubuntu/server/"
 
-chmod -R 777 $DIR
+sudo chmod -R 777 $DIR

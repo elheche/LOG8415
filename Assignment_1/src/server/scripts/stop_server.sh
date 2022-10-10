@@ -1,6 +1,5 @@
 #!/bin/bash
 
-DIR="/home/ubuntu/server/"
-PID="pid_file"
+PID="/home/ubuntu/server/pid_file"
 
-sudo kill "$(cat $DIR$PID)"
+sudo kill "$(cat $PID)"
