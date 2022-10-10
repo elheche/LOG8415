@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from cloudWatch import *
+from cloudWatch import handler
 from constants import *
 from ec2 import *
 from elb import *
@@ -17,43 +17,59 @@ def main() -> None:
         ec2 = create_aws_service(EC2_CONFIG['Common']['ServiceName'])
         elbv2 = create_aws_service(ELB_V2_CONFIG['Common']['ServiceName'])
     else:
-        parser = argparse.ArgumentParser(
-            description=('Program that creates two clusters of virtual machines. '
-                         'It first looks for credentials and configuration files provided by your AWS CLI '
-                         '(You can configure your AWS CLI using this command: <aws configure>). '
-                         'If not found, it offers you the option to manually enter their values using '
-                         'the arguments below:'
-                         )
-        )
-        parser.add_argument('-r', help='The region name for your AWS account.', dest='AWS_REGION_NAME', required=True, nargs=1)
-        parser.add_argument('-i', help='The access key for your AWS account.', dest='AWS_ACCESS_KEY_ID', required=True, nargs=1)
-        parser.add_argument('-s', help='The secret key for your AWS account.', dest='AWS_SECRET_ACCESS_KEY', required=True, nargs=1)
-        parser.add_argument('-t', help='The session key for your AWS account.', dest='AWS_SESSION_TOKEN', required=True, nargs=1)
-
-        args = parser.parse_args()
-
-        # Initialize ec2, elbv2 services with user credentials and configuration
+        # parser = argparse.ArgumentParser(
+        #     description=('Program that creates two clusters of virtual machines. '
+        #                  'It first looks for credentials and configuration files provided by your AWS CLI '
+        #                  '(You can configure your AWS CLI using this command: <aws configure>). '
+        #                  'If not found, it offers you the option to manually enter their values using '
+        #                  'the arguments below:'
+        #                  )
+        # )
+        # parser.add_argument('-r', help='The region name for your AWS account.', dest='AWS_REGION_NAME', required=True, nargs=1)
+        # parser.add_argument('-i', help='The access key for your AWS account.', dest='AWS_ACCESS_KEY_ID', required=True, nargs=1)
+        # parser.add_argument('-s', help='The secret key for your AWS account.', dest='AWS_SECRET_ACCESS_KEY', required=True, nargs=1)
+        # parser.add_argument('-t', help='The session key for your AWS account.', dest='AWS_SESSION_TOKEN', required=True, nargs=1)
+        #
+        # args = parser.parse_args()
+        #
+        # # Initialize ec2, elbv2 services with user credentials and configuration
+        # ec2 = create_aws_service(
+        #     EC2_CONFIG['Common']['ServiceName'],
+        #     args.AWS_REGION_NAME[0],
+        #     args.AWS_ACCESS_KEY_ID[0],
+        #     args.AWS_SECRET_ACCESS_KEY[0],
+        #     args.AWS_SESSION_TOKEN[0]
+        # )
+        #
+        # elbv2 = create_aws_service(
+        #     ELB_V2_CONFIG['Common']['ServiceName'],
+        #     args.AWS_REGION_NAME[0],
+        #     args.AWS_ACCESS_KEY_ID[0],
+        #     args.AWS_SECRET_ACCESS_KEY[0],
+        #     args.AWS_SESSION_TOKEN[0]
+        # )
         ec2 = create_aws_service(
             EC2_CONFIG['Common']['ServiceName'],
-            args.AWS_REGION_NAME[0],
-            args.AWS_ACCESS_KEY_ID[0],
-            args.AWS_SECRET_ACCESS_KEY[0],
-            args.AWS_SESSION_TOKEN[0]
+            "us-east-1",
+            "ASIAVQW6TG7UOBAGDKID",
+            "tKN/uKUBVojTAcPqLTWcAJRRdOkjklVRPmO9uvot",
+            "FwoGZXIvYXdzEKj//////////wEaDIf0fFNzXKJxjOmTryLCAXDlk7p++zniY65G7fSesBKBwI5q78VW5ClThooGqOeAg/99W+KM9aypxGC5NhikcOmg3Oxqx2PvNcbzVE7VT9vTnusVZqJJ/6VJ228ZuV6xeAZPDXE2tmsEHG3FM6idEzbUXwUwVHcCeS2VpispgfWoFBdOxJGvrtdf8WCGlUSw3KkXewWOqFQXDniC52UkLLsqmijbG05yUE+pab12KT+YQB4TH17t/ihgX6Tq12G6FQoAQ6nVc8heY9YFUZM3GtuKKKvekJoGMi23zK7208amncFMkIQejzBG6JB7xi1Lq2D3xdc3QGucfHGd0C80GHbSFzgEBg8="
         )
 
         elbv2 = create_aws_service(
             ELB_V2_CONFIG['Common']['ServiceName'],
-            args.AWS_REGION_NAME[0],
-            args.AWS_ACCESS_KEY_ID[0],
-            args.AWS_SECRET_ACCESS_KEY[0],
-            args.AWS_SESSION_TOKEN[0]
+            "us-east-1",
+            "ASIAVQW6TG7UOBAGDKID",
+            "tKN/uKUBVojTAcPqLTWcAJRRdOkjklVRPmO9uvot",
+            "FwoGZXIvYXdzEKj//////////wEaDIf0fFNzXKJxjOmTryLCAXDlk7p++zniY65G7fSesBKBwI5q78VW5ClThooGqOeAg/99W+KM9aypxGC5NhikcOmg3Oxqx2PvNcbzVE7VT9vTnusVZqJJ/6VJ228ZuV6xeAZPDXE2tmsEHG3FM6idEzbUXwUwVHcCeS2VpispgfWoFBdOxJGvrtdf8WCGlUSw3KkXewWOqFQXDniC52UkLLsqmijbG05yUE+pab12KT+YQB4TH17t/ihgX6Tq12G6FQoAQ6nVc8heY9YFUZM3GtuKKKvekJoGMi23zK7208amncFMkIQejzBG6JB7xi1Lq2D3xdc3QGucfHGd0C80GHbSFzgEBg8="
         )
+
 
     ###################################################################################################################
     #                                             Creating and Configuring Clusters & Load Balancer
     ###################################################################################################################
 
-    # TODO: Do we need to create a VPC specific to this assignment or using the default one ?
+    # # TODO: Do we need to create a VPC specific to this assignment or using the default one ?
     vpc_id = get_vpc_id(ec2)
 
     # Create a security group and set its inbound rules to accept HTTP and SSH connections
@@ -115,14 +131,27 @@ def main() -> None:
     ###################################################################################################################
     #                                             Getting CloudWatch Metrics
     ###################################################################################################################
-    cloudwatch = boto3.client('cloudwatch', region_name= args.AWS_REGION_NAME[0],
-                              aws_access_key_id= args.AWS_ACCESS_KEY_ID[0],
-                              aws_secret_access_key = args.AWS_SECRET_ACCESS_KEY[0],
-                              aws_session_token= args.AWS_SESSION_TOKEN[0]
+    # cloudwatch = boto3.client('cloudwatch', region_name= args.AWS_REGION_NAME[0],
+    #                           aws_access_key_id= args.AWS_ACCESS_KEY_ID[0],
+    #                           aws_secret_access_key = args.AWS_SECRET_ACCESS_KEY[0],
+    #                           aws_session_token= args.AWS_SESSION_TOKEN[0]
+    #                           )
+
+    client = boto3.client("elbv2", region_name='us-east-1', aws_access_key_id="ASIAVQW6TG7UOBAGDKID",
+                              aws_secret_access_key="tKN/uKUBVojTAcPqLTWcAJRRdOkjklVRPmO9uvot",
+                              aws_session_token="FwoGZXIvYXdzEKj//////////wEaDIf0fFNzXKJxjOmTryLCAXDlk7p++zniY65G7fSesBKBwI5q78VW5ClThooGqOeAg/99W+KM9aypxGC5NhikcOmg3Oxqx2PvNcbzVE7VT9vTnusVZqJJ/6VJ228ZuV6xeAZPDXE2tmsEHG3FM6idEzbUXwUwVHcCeS2VpispgfWoFBdOxJGvrtdf8WCGlUSw3KkXewWOqFQXDniC52UkLLsqmijbG05yUE+pab12KT+YQB4TH17t/ihgX6Tq12G6FQoAQ6nVc8heY9YFUZM3GtuKKKvekJoGMi23zK7208amncFMkIQejzBG6JB7xi1Lq2D3xdc3QGucfHGd0C80GHbSFzgEBg8="
                               )
 
-    save_metrics(cloudwatch,target_group_arn_1)
-    save_metrics(cloudwatch, target_group_arn_1)
+    response = client.describe_target_groups(
+        LoadBalancerArn="your arn goes here"
+    )
+
+    cloudwatch = boto3.client('cloudwatch', region_name='us-east-1', aws_access_key_id="ASIAVQW6TG7UOBAGDKID",
+                              aws_secret_access_key="tKN/uKUBVojTAcPqLTWcAJRRdOkjklVRPmO9uvot",
+                              aws_session_token="FwoGZXIvYXdzEKj//////////wEaDIf0fFNzXKJxjOmTryLCAXDlk7p++zniY65G7fSesBKBwI5q78VW5ClThooGqOeAg/99W+KM9aypxGC5NhikcOmg3Oxqx2PvNcbzVE7VT9vTnusVZqJJ/6VJ228ZuV6xeAZPDXE2tmsEHG3FM6idEzbUXwUwVHcCeS2VpispgfWoFBdOxJGvrtdf8WCGlUSw3KkXewWOqFQXDniC52UkLLsqmijbG05yUE+pab12KT+YQB4TH17t/ihgX6Tq12G6FQoAQ6nVc8heY9YFUZM3GtuKKKvekJoGMi23zK7208amncFMkIQejzBG6JB7xi1Lq2D3xdc3QGucfHGd0C80GHbSFzgEBg8="
+                              )
+
+    handler(cloudwatch)
 
     ###################################################################################################################
     #                                             Code to Run Docker Image to Request Clusters
