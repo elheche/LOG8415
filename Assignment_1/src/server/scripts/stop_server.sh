@@ -2,4 +2,8 @@
 
 PID="/home/ubuntu/server/pid_file"
 
-sudo kill "$(cat $PID)"
+if [[ -e $PID ]]; then
+  sudo kill "$(cat $PID)"
+else
+  sudo pkill -f gunicorn
+fi
