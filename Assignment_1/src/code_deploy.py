@@ -34,3 +34,20 @@ def create_deployment_group(code_deploy: CodeDeployClient, code_deploy_config: d
         deployment_group_id = response['deploymentGroupId']
         print(f'Deployment group {deployment_group_id} created successfully.')
         return deployment_group_id
+
+
+def create_deployment(code_deploy: CodeDeployClient, code_deploy_config: dict) -> str:
+    try:
+        print('Launching application deployment...')
+        response = code_deploy.create_deployment(
+            description=f'Deploy a simple flask server to {code_deploy_config["DeploymentGroupName"]}',
+            applicationName=code_deploy_config['ApplicationName'],
+            deploymentGroupName=code_deploy_config['DeploymentGroupName'],
+            revision=code_deploy_config['Revision']
+        )
+    except Exception as e:
+        print(e)
+    else:
+        deployment_id = response['deploymentId']
+        print(f'Application deployment {deployment_id} launched successfully.')
+        return deployment_id
