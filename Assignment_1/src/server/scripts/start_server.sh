@@ -1,7 +1,7 @@
 #!/bin/bash
 
 DIR="/home/ubuntu/server/"
-GUNICORN="$(DIR)venv/bin"
+GUNICORN="${DIR}venv/bin/gunicorn"
 APP="wsgi:app"
 PID="pid_file"
 ADDRESS="0.0.0.0:80"
