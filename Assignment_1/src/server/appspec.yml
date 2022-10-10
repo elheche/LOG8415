@@ -1,7 +1,7 @@
 version: 0.0
 os: linux
 files:
-  - source: /
+  - source: /Assignment_1/src/server
     destination: /home/ubuntu/server
 hooks:
   BeforeInstall:
