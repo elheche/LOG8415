@@ -2,11 +2,12 @@ import argparse
 from pathlib import Path
 
 from cloudWatch import *
+from code_deploy import *
 from constants import *
 from ec2 import *
 from elb import *
+from iam import *
 from init_aws_service import *
-from test_scenarios import send_get_requests
 
 
 def main() -> None:
@@ -14,9 +15,11 @@ def main() -> None:
     config_exists = Path(f'{Path.home()}/.aws/config').is_file()
 
     if credentials_exists and config_exists:
-        # Initialize ec2, elbv2 services with default credentials and configuration
+        # Initialize ec2, elbv2, CodeDeploy, iam services with default credentials and configuration
         ec2 = create_aws_service(EC2_CONFIG['Common']['ServiceName'])
         elbv2 = create_aws_service(ELB_V2_CONFIG['Common']['ServiceName'])
+        code_deploy = create_aws_service(CODE_DEPLOY_CONFIG['Common']['ServiceName'])
+        iam = create_aws_service(IAM_CONFIG['Common']['ServiceName'])
     else:
         parser = argparse.ArgumentParser(
             description=('Program that creates two clusters of virtual machines. '
@@ -33,7 +36,7 @@ def main() -> None:
 
         args = parser.parse_args()
 
-        # Initialize ec2, elbv2 services with user credentials and configuration
+        # Initialize ec2, elbv2, CodeDeploy, iam services with user credentials and configuration
         ec2 = create_aws_service(
             EC2_CONFIG['Common']['ServiceName'],
             args.AWS_REGION_NAME[0],
@@ -50,12 +53,31 @@ def main() -> None:
             args.AWS_SESSION_TOKEN[0]
         )
 
+        code_deploy = create_aws_service(
+            CODE_DEPLOY_CONFIG['Common']['ServiceName'],
+            args.AWS_REGION_NAME[0],
+            args.AWS_ACCESS_KEY_ID[0],
+            args.AWS_SECRET_ACCESS_KEY[0],
+            args.AWS_SESSION_TOKEN[0]
+        )
+
+        iam = create_aws_service(
+            IAM_CONFIG['Common']['ServiceName'],
+            args.AWS_REGION_NAME[0],
+            args.AWS_ACCESS_KEY_ID[0],
+            args.AWS_SECRET_ACCESS_KEY[0],
+            args.AWS_SESSION_TOKEN[0]
+        )
+
     ###################################################################################################################
-    #                                             Creating and Configuring Clusters & Load Balancer
+    #                                    Creating and Configuring Clusters & Load Balancer
     ###################################################################################################################
 
     # TODO: Do we need to create a VPC specific to this assignment or using the default one ?
     vpc_id = get_vpc_id(ec2)
+
+    # We'll use LabRole (a default role) since we can't create a new one (needed to give permissions to CodeDeploy).
+    role_arn = get_role(iam, IAM_CONFIG['Common']['RoleName'])
 
     # Create a security group and set its inbound rules to accept HTTP and SSH connections
     security_group_id = create_security_group(ec2, vpc_id, EC2_CONFIG['Common']['SecurityGroups'][0])
@@ -111,22 +133,49 @@ def main() -> None:
     #                                             Deploying Flask Applications
     ###################################################################################################################
 
-    send_get_requests.main()
+    # Create an application to deploy to Cluster1 and Cluster2
+    application_id = create_application(code_deploy, CODE_DEPLOY_CONFIG['Common']['ApplicationName'])
+
+    # Create two deployment groups Cluster1 and Cluster 2 to target ec2 instances that belong to these clusters
+    deployment_group_id_1 = create_deployment_group(
+        code_deploy,
+        CODE_DEPLOY_CONFIG['Common'] | CODE_DEPLOY_CONFIG['Cluster1'],
+        role_arn
+    )
+
+    deployment_group_id_2 = create_deployment_group(
+        code_deploy,
+        CODE_DEPLOY_CONFIG['Common'] | CODE_DEPLOY_CONFIG['Cluster2'],
+        role_arn
+    )
+
+    # Launch two app deployments, the first deploys to Cluster1, the second deploys to Cluster2
+    deployment_id_1 = create_deployment(
+        code_deploy,
+        CODE_DEPLOY_CONFIG['Common'] | CODE_DEPLOY_CONFIG['Cluster1']
+    )
+
+    deployment_id_2 = create_deployment(
+        code_deploy,
+        CODE_DEPLOY_CONFIG['Common'] | CODE_DEPLOY_CONFIG['Cluster2']
+    )
 
     ###################################################################################################################
     #                                             Getting CloudWatch Metrics
     ###################################################################################################################
-    cloudwatch = boto3.client('cloudwatch', region_name= args.AWS_REGION_NAME[0],
-                              aws_access_key_id= args.AWS_ACCESS_KEY_ID[0],
-                              aws_secret_access_key = args.AWS_SECRET_ACCESS_KEY[0],
-                              aws_session_token= args.AWS_SESSION_TOKEN[0]
-                              )
+    cloudwatch = boto3.client(
+        'cloudwatch',
+        region_name=args.AWS_REGION_NAME[0],
+        aws_access_key_id=args.AWS_ACCESS_KEY_ID[0],
+        aws_secret_access_key=args.AWS_SECRET_ACCESS_KEY[0],
+        aws_session_token=args.AWS_SESSION_TOKEN[0]
+    )
 
     # save metrics for target group 1
-    save_metrics(cloudwatch,target_group_arn_1, alb_arn)
+    save_metrics(cloudwatch, target_group_arn_1, alb_arn)
 
     # save metrics for target group 2
-    save_metrics(cloudwatch,target_group_arn_2, alb_arn)
+    save_metrics(cloudwatch, target_group_arn_2, alb_arn)
 
     ###################################################################################################################
     #                                             Code to Run Docker Image to Request Clusters
