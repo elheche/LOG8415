@@ -3,14 +3,14 @@ from typing import Literal
 
 
 def create_aws_service(
-        aws_service_name: Literal["ec2", "elbv2"],
+        aws_service_name: Literal['ec2', 'elbv2', 'codedeploy', 'cloudwatch', 'iam'],
         aws_region_name: str = None,
         aws_access_key_id: str = None,
         aws_secret_access_key: str = None,
         aws_session_token: str = None
 ):
     try:
-        print(f"Creating {aws_service_name} service...")
+        print(f'Creating {aws_service_name} service...')
         aws_service = boto3.client(
             service_name=aws_service_name,
             region_name=aws_region_name,
@@ -21,5 +21,5 @@ def create_aws_service(
     except Exception as e:
         print(e)
     else:
-        print(f"{aws_service_name} service created successfully.")
+        print(f'{aws_service_name} service created successfully.')
         return aws_service
