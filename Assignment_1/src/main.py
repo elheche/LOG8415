@@ -6,6 +6,7 @@ from constants import *
 from ec2 import *
 from elb import *
 from init_aws_service import *
+from test_scenarios import send_get_requests
 
 
 def main() -> None:
@@ -110,7 +111,7 @@ def main() -> None:
     #                                             Deploying Flask Applications
     ###################################################################################################################
 
-    # Put code here
+    send_get_requests.main()
 
     ###################################################################################################################
     #                                             Getting CloudWatch Metrics
@@ -122,10 +123,10 @@ def main() -> None:
                               )
 
     # save metrics for target group 1
-    save_metrics(cloudwatch,target_group_arn_1)
+    save_metrics(cloudwatch,target_group_arn_1, alb_arn)
 
     # save metrics for target group 2
-    save_metrics(cloudwatch, target_group_arn_1)
+    save_metrics(cloudwatch,target_group_arn_2, alb_arn)
 
     ###################################################################################################################
     #                                             Code to Run Docker Image to Request Clusters

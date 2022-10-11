@@ -4,18 +4,68 @@ from datetime import date, timedelta, datetime
 import json
 
 
-def access_last_days_data_metric(cloudwatch_client, targetGroupARN, loadBalancerARN, days):
-    if targetGroupARN is not None:
-        tgarray = targetGroupARN.split(':')
-        tgstring = tgarray[-1]
+def RequestCount_metric(cloudwatch_client, tgstring, lbstring2, yesterday, tomorrow):
+    response = cloudwatch_client.get_metric_data(
+        MetricDataQueries=[
+            {
+                'Id': 'myrequest',
+                'MetricStat': {
+                    'Metric': {
+                        'Namespace': 'AWS/ApplicationELB',
+                        'MetricName': 'RequestCount',
+                        'Dimensions': [
+                            {
+                                'Name': 'TargetGroup',
+                                'Value': tgstring
+                            },
+                            {
+                                'Name': 'LoadBalancer',
+                                'Value': lbstring2
+                            },
+                        ]
+                    },
+                    'Period': 300,
+                    'Stat': 'Sum',
+                    'Unit': 'Count'
+                }
+            },
+        ],
+        StartTime=datetime(yesterday.year, yesterday.month, yesterday.day),
+        EndTime=datetime(tomorrow.year, tomorrow.month, tomorrow.day),
+    )
 
-    if loadBalancerARN is not None:
-        lbarray = loadBalancerARN.split(':')
-        lbstring = lbarray[-1]
-        lbarray2 = lbstring.split('/')
-        lbstring2 = lbarray2[1] + '/' + lbarray2[2] + '/' + lbarray2[3]
-    yesterday = date.today() - timedelta(days=days)
-    tomorrow = date.today() + timedelta(days=1)
+    return response
+
+def ActiveConnectionCount_metric(cloudwatch_client, tgstring, lbstring2, yesterday, tomorrow):
+    response = cloudwatch_client.get_metric_data(
+        MetricDataQueries=[
+            {
+                'Id': 'myrequest',
+                'MetricStat': {
+                    'Metric': {
+                        'Namespace': 'AWS/ApplicationELB',
+                        'MetricName': 'ActiveConnectionCount',
+                        'Dimensions': [
+                            {
+                                'Name': 'LoadBalancer',
+                                'Value': lbstring2
+                            },
+                        ]
+                    },
+                    'Period': 300,
+                    'Stat': 'Sum',
+                    'Unit': 'Count'
+                }
+            },
+        ],
+        StartTime=datetime(yesterday.year, yesterday.month, yesterday.day),
+        EndTime=datetime(tomorrow.year, tomorrow.month, tomorrow.day),
+    )
+
+    return response
+
+
+def TargetResponseTime_metric(cloudwatch_client, tgstring, lbstring2, yesterday, tomorrow):
 
     response = cloudwatch_client.get_metric_data(
         MetricDataQueries=[
@@ -24,21 +74,21 @@ def access_last_days_data_metric(cloudwatch_client, targetGroupARN, loadBalancer
                 'MetricStat': {
                     'Metric': {
                         'Namespace': 'AWS/ApplicationELB',
-                        'MetricName': 'HealthyHostCount',
+                        'MetricName': 'TargetResponseTime',
                         'Dimensions': [
                             {
                                 'Name': 'TargetGroup',
                                 'Value': tgstring
                             },
                             {
-                                'Name': 'TargetGroup',
-                                'Value': tgstring
+                                'Name': 'LoadBalancer',
+                                'Value': lbstring2
                             },
                         ]
                     },
-                    'Period': 60,
-                    'Stat': 'Sum',
-                    'Unit': 'Microseconds'
+                    'Period': 300,
+                    'Stat': 'Average',
+                    'Unit': 'Count'
                 }
             },
         ],
@@ -46,15 +96,35 @@ def access_last_days_data_metric(cloudwatch_client, targetGroupARN, loadBalancer
         EndTime=datetime(tomorrow.year, tomorrow.month, tomorrow.day),
     )
 
-    # return response['MetricDataResults'][0]['Values']
     return response
 
 
-def save_data(stats):
-    with open('data.json', 'w') as fp:
-        json.dump(stats, fp)
+def save_data(json_file_name, data):
+    with open(json_file_name, 'w') as fp:
+        json.dumps(data, indent=4, sort_keys=True, default=str)
 
 
-def save_metrics(cloudwatch, mytargetgrouparn=None, myapplicationlbarn=None):
-    stats = access_last_days_data_metric(cloudwatch, mytargetgrouparn, myapplicationlbarn, 2)
-    save_data(stats)
+def save_metrics(cloudwatch, mytargetgrouparn=None, loadBalancerARN=None):
+    if mytargetgrouparn is not None:
+        tgarray = mytargetgrouparn.split(':')
+        tgstring = tgarray[-1]
+
+    if loadBalancerARN is not None:
+        lbarray = loadBalancerARN.split(':')
+        lbstring = lbarray[-1]
+        lbarray2 = lbstring.split('/')
+        lbstring2 = lbarray2[1] + '/' + lbarray2[2] + '/' + lbarray2[3]
+
+    yesterday = date.today() - timedelta(days=2)
+    tomorrow = date.today() + timedelta(days=2)
+
+    data = RequestCount_metric(cloudwatch, tgstring=tgstring, lbstring2=lbstring2, yesterday=yesterday, tomorrow=tomorrow)
+    save_data("RequestCount_metric.json", data)
+
+    data = ActiveConnectionCount_metric(cloudwatch, tgstring=tgstring, lbstring2=lbstring2, yesterday=yesterday, tomorrow=tomorrow)
+    save_data("ActiveConnectionCount.json", data)
+
+    data = TargetResponseTime_metric(cloudwatch, tgstring=tgstring, lbstring2=lbstring2, yesterday=yesterday, tomorrow=tomorrow)
+    save_data("TargetResponseTime_metric.json", data)
+
+    print("done")
