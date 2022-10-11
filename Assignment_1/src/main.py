@@ -160,6 +160,13 @@ def main() -> None:
         CODE_DEPLOY_CONFIG['Common'] | CODE_DEPLOY_CONFIG['Cluster2']
     )
 
+
+    ###################################################################################################################
+    #                                             Code to Run Docker Image to Request Clusters
+    ###################################################################################################################
+
+    # Put code here
+
     ###################################################################################################################
     #                                             Getting CloudWatch Metrics
     ###################################################################################################################
@@ -171,17 +178,14 @@ def main() -> None:
         aws_session_token=args.AWS_SESSION_TOKEN[0]
     )
 
+    # save metrics for load balancer
+    load_balancer_metrics(cloudwatch, alb_arn)
+
     # save metrics for target group 1
-    save_metrics(cloudwatch, target_group_arn_1, alb_arn)
+    targets_metrics(cloudwatch,target_group_arn_1, alb_arn, 1)
 
     # save metrics for target group 2
-    save_metrics(cloudwatch, target_group_arn_2, alb_arn)
-
-    ###################################################################################################################
-    #                                             Code to Run Docker Image to Request Clusters
-    ###################################################################################################################
-
-    # Put code here
+    targets_metrics(cloudwatch,target_group_arn_2, alb_arn, 2)
 
     ###################################################################################################################
     #                                             Deleting Everything
