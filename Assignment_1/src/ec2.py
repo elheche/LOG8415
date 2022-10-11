@@ -80,7 +80,10 @@ def launch_ec2_instances(ec2: EC2Client, ec2_config: dict) -> list[str]:
             Placement={
                 'AvailabilityZone': ec2_config['AvailabilityZone']
             },
-            TagSpecifications=ec2_config['TagSpecifications']
+            TagSpecifications=ec2_config['TagSpecifications'],
+            IamInstanceProfile={
+                'Name': ec2_config['InstanceProfileName']
+            },
         )
     except Exception as e:
         print(e)

@@ -4,6 +4,7 @@ EC2_CONFIG = {
         'ImageId': 'ami-0ee23bfc74a881de5',  # Ubuntu, 18.04 LTS, 64-bit (x86) (CodeDeploy Agent preinstalled)
         'KeyPairName': 'log8415_lab1_kp',
         'SecurityGroups': ['log8415_lab1_sg'],
+        'InstanceProfileName': 'LabInstanceProfile'  # We'll use this default role since we can't create a new one.
     },
     'Cluster1': {
         'InstanceCount': 4,
@@ -63,7 +64,7 @@ CODE_DEPLOY_CONFIG = {
             'revisionType': 'GitHub',
             'gitHubLocation': {
                 'repository': 'elheche/LOG8415',
-                'commitId': 'b2da0fc407b433f4be1ec1ac35ef1cd7de20a169'  # To be updated when a new version of the server is pushed
+                'commitId': 'cd7d7941643de31d44051b79e5cc4d8d41f89d11'  # To be updated when a new version of the server is pushed
             }
         }
     },
@@ -86,5 +87,12 @@ CODE_DEPLOY_CONFIG = {
                 'Type': 'KEY_AND_VALUE'
             },
         ]
+    }
+}
+
+IAM_CONFIG = {
+    'Common': {
+        'ServiceName': 'iam',
+        'RoleName': 'LabRole'  # We'll use this default role since we can't create a new one.
     }
 }
