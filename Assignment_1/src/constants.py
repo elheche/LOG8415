@@ -61,10 +61,11 @@ CODE_DEPLOY_CONFIG = {
             'deploymentOption': 'WITHOUT_TRAFFIC_CONTROL'
         },
         'Revision': {
-            'revisionType': 'GitHub',
-            'gitHubLocation': {
-                'repository': 'elheche/LOG8415',
-                'commitId': 'cd7d7941643de31d44051b79e5cc4d8d41f89d11'  # To be updated when a new version of the server is pushed
+            'revisionType': 'S3',
+            's3Location': {
+                'bucket': 'log8415-lab1-bucket',
+                'key': 'server.zip',
+                'bundleType': 'zip',
             }
         }
     },
