@@ -11,5 +11,6 @@ source "$ACTIVATE"
 pip3.6 install wheel
 pip3.6 install flask
 pip3.6 install gunicorn
+pip3.6 install requests
 deactivate
 
