@@ -6,7 +6,7 @@ import json
 
 def save_data(json_file_name, data):
     with open(json_file_name, 'w') as fp:
-        json.dumps(data, indent=4, sort_keys=True, default=str)
+        json.dump(data, fp, indent=4, sort_keys=True, default=str)
 
 
 ###################################################################################################################
@@ -216,7 +216,7 @@ def RequestCountPerTarget_metric(cloudwatch_client, tgstring, lbstring2, yesterd
                         ]
                     },
                     'Period': 300,
-                    'Stat': 'Average',
+                    'Stat': 'Sum',
                     'Unit': 'Count'
                 }
             },
@@ -249,7 +249,7 @@ def TargetConnectionErrorCount_metric(cloudwatch_client, tgstring, lbstring2, ye
                         ]
                     },
                     'Period': 300,
-                    'Stat': 'Average',
+                    'Stat': 'Sum',
                     'Unit': 'Count'
                 }
             },
@@ -343,6 +343,9 @@ def load_balancer_metrics(cloudwatch, loadBalancerARN):
 
     data = ActiveConnectionCount_metric(cloudwatch, lbstring2=lbstring2, yesterday=yesterday, tomorrow=tomorrow)
     save_data("Cloudwatch/Load_balancer/ActiveConnectionCount_metric.json", data)
+
+    data = ConsumedLCUs_metric(cloudwatch, lbstring2=lbstring2, yesterday=yesterday, tomorrow=tomorrow)
+    save_data("Cloudwatch/Load_balancer/ConsumedLCUs_metric.json", data)
 
     data = HTTP_Redirect_Count_metric(cloudwatch, lbstring2=lbstring2, yesterday=yesterday, tomorrow=tomorrow)
     save_data("Cloudwatch/Load_balancer/HTTP_Redirect_Count_metric.json", data)
