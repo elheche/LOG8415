@@ -84,6 +84,7 @@ def launch_ec2_instances(ec2: EC2Client, ec2_config: dict) -> list[str]:
             IamInstanceProfile={
                 'Name': ec2_config['InstanceProfileName']
             },
+            MetadataOptions=ec2_config['MetadataOptions']
         )
     except Exception as e:
         print(e)
@@ -130,6 +131,34 @@ def get_subnet_ids(ec2: EC2Client, vpc_id: str, availability_zone: list[str]) ->
         subnet_ids = [subnet['SubnetId'] for subnet in response['Subnets']]
         print(f'Subnet ids obtained successfully.\n {subnet_ids}')
         return subnet_ids
+
+
+def add_tag_to_ec2_instance(ec2: EC2Client, ec2_instance_id: str, tag: dict) -> None:
+    try:
+        print('Adding a tag to an ec2 instance...')
+        ec2.create_tags(
+            Resources=[ec2_instance_id],
+            Tags=[
+                {
+                    'Key': tag['Key'],
+                    'Value': tag['Value']
+                }
+            ]
+        )
+    except Exception as e:
+        print(e)
+    else:
+        print(f'Tag successfully added to ec2 instance {ec2_instance_id}.')
+
+
+def reboot_all_ec2_instances(ec2: EC2Client, ec2_instance_ids: list[str]) -> None:
+    try:
+        print('Rebooting all ec2 instances...')
+        ec2.reboot_instances(InstanceIds=ec2_instance_ids)
+    except Exception as e:
+        print(e)
+    else:
+        print(f'All ec2 instances rebooted successfully.\n{ec2_instance_ids}')
 
 
 def terminate_ec2_instances(
