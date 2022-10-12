@@ -4,7 +4,10 @@ EC2_CONFIG = {
         'ImageId': 'ami-0ee23bfc74a881de5',  # Ubuntu, 18.04 LTS, 64-bit (x86) (CodeDeploy Agent preinstalled)
         'KeyPairName': 'log8415_lab1_kp',
         'SecurityGroups': ['log8415_lab1_sg'],
-        'InstanceProfileName': 'LabInstanceProfile'  # We'll use this default role since we can't create a new one.
+        'InstanceProfileName': 'LabInstanceProfile',  # We'll use this default role since we can't create a new one.
+        'MetadataOptions': {
+            'InstanceMetadataTags': 'enabled'
+        }
     },
     'Cluster1': {
         'InstanceCount': 4,
