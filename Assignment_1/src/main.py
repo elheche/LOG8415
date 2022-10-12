@@ -81,6 +81,18 @@ def main() -> None:
     # Wait until all ec2 instance states pass to 'running'
     wait_until_all_running(ec2, ec2_instance_ids_1 + ec2_instance_ids_2)
 
+    # Add a unique tag to each ec2 instance
+    i = 1
+    for ec2_instance_id in ec2_instance_ids_1 + ec2_instance_ids_2:
+        add_tag_to_ec2_instance(ec2, ec2_instance_id, {'Key': 'Instance', 'Value': str(i)})
+        i += 1
+
+    # Reboot all ec2 instance to update tag list
+    reboot_all_ec2_instances(ec2, ec2_instance_ids_1 + ec2_instance_ids_2)
+
+    # Wait until all ec2 instance states pass to 'running' after rebooting
+    wait_until_all_running(ec2, ec2_instance_ids_1 + ec2_instance_ids_2)
+
     # Create two target groups: Cluster1 and Cluster2
     target_group_arn_1 = create_target_group(elbv2, ELB_V2_CONFIG['Cluster1']['TargetGroupName'], vpc_id)
     target_group_arn_2 = create_target_group(elbv2, ELB_V2_CONFIG['Cluster2']['TargetGroupName'], vpc_id)
@@ -157,7 +169,6 @@ def main() -> None:
         code_deploy,
         CODE_DEPLOY_CONFIG['Common'] | CODE_DEPLOY_CONFIG['Cluster2']
     )
-
 
     ###################################################################################################################
     #                                             Code to Run Docker Image to Request Clusters
