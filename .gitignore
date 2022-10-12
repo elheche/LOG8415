@@ -341,4 +341,7 @@ mypy_boto3_output/
 # EC2 key pair
 *.pem
 
+# Zip file
+*.zip
+
 # End of https://www.toptal.com/developers/gitignore/api/python,pycharm,macos,windows
