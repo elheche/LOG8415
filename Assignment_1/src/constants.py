@@ -96,3 +96,33 @@ IAM_CONFIG = {
         'RoleName': 'LabRole'  # We'll use this default role since we can't create a new one.
     }
 }
+
+S3_CONFIG = {
+    'Common': {
+        'ServiceName': 's3',
+        'Bucket': 'log8415-lab1-bucket',
+        'BucketPolicy': {
+            "Statement": [
+                {
+                    "Action": ["s3:PutObject"],
+                    "Effect": "Allow",
+                    "Resource": f"arn:aws:s3:::log8415-lab1-bucket/*",
+                },
+                {
+                    "Action": [
+                        "s3:Get*",
+                        "s3:List*"
+                    ],
+                    "Effect": "Allow",
+                    "Resource": f"arn:aws:s3:::log8415-lab1-bucket/*",
+                }
+            ]
+        }
+    }
+}
+
+STS_CONFIG = {
+    'Common': {
+        'ServiceName': 'sts'
+    }
+}

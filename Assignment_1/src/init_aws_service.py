@@ -3,7 +3,7 @@ from typing import Literal
 
 
 def create_aws_service(
-        aws_service_name: Literal['ec2', 'elbv2', 'codedeploy', 'cloudwatch', 'iam'],
+        aws_service_name: Literal['ec2', 'elbv2', 'codedeploy', 'cloudwatch', 'iam', 's3', 'sts'],
         aws_region_name: str = None,
         aws_access_key_id: str = None,
         aws_secret_access_key: str = None,
