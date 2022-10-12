@@ -7,6 +7,8 @@ from constants import *
 from ec2 import *
 from elb import *
 from iam import *
+from s3 import *
+from sts import *
 from init_aws_service import *
 
 
@@ -15,11 +17,13 @@ def main() -> None:
     config_exists = Path(f'{Path.home()}/.aws/config').is_file()
 
     if credentials_exists and config_exists:
-        # Initialize ec2, elbv2, CodeDeploy, iam services with default credentials and configuration
+        # Initialize ec2, elbv2, CodeDeploy, iam, s3, sts services with default credentials and configuration
         ec2 = create_aws_service(EC2_CONFIG['Common']['ServiceName'])
         elbv2 = create_aws_service(ELB_V2_CONFIG['Common']['ServiceName'])
         code_deploy = create_aws_service(CODE_DEPLOY_CONFIG['Common']['ServiceName'])
         iam = create_aws_service(IAM_CONFIG['Common']['ServiceName'])
+        s3 = create_aws_service('s3')
+        sts = create_aws_service('sts')
     else:
         parser = argparse.ArgumentParser(
             description=('Program that creates two clusters of virtual machines. '
@@ -36,38 +40,20 @@ def main() -> None:
 
         args = parser.parse_args()
 
-        # Initialize ec2, elbv2, CodeDeploy, iam services with user credentials and configuration
-        ec2 = create_aws_service(
-            EC2_CONFIG['Common']['ServiceName'],
+        user_credentials_config = [
             args.AWS_REGION_NAME[0],
             args.AWS_ACCESS_KEY_ID[0],
             args.AWS_SECRET_ACCESS_KEY[0],
             args.AWS_SESSION_TOKEN[0]
-        )
+        ]
 
-        elbv2 = create_aws_service(
-            ELB_V2_CONFIG['Common']['ServiceName'],
-            args.AWS_REGION_NAME[0],
-            args.AWS_ACCESS_KEY_ID[0],
-            args.AWS_SECRET_ACCESS_KEY[0],
-            args.AWS_SESSION_TOKEN[0]
-        )
-
-        code_deploy = create_aws_service(
-            CODE_DEPLOY_CONFIG['Common']['ServiceName'],
-            args.AWS_REGION_NAME[0],
-            args.AWS_ACCESS_KEY_ID[0],
-            args.AWS_SECRET_ACCESS_KEY[0],
-            args.AWS_SESSION_TOKEN[0]
-        )
-
-        iam = create_aws_service(
-            IAM_CONFIG['Common']['ServiceName'],
-            args.AWS_REGION_NAME[0],
-            args.AWS_ACCESS_KEY_ID[0],
-            args.AWS_SECRET_ACCESS_KEY[0],
-            args.AWS_SESSION_TOKEN[0]
-        )
+        # Initialize ec2, elbv2, CodeDeploy, iam, s3, sts services with user credentials and configuration
+        ec2 = create_aws_service(EC2_CONFIG['Common']['ServiceName'], *user_credentials_config)
+        elbv2 = create_aws_service(ELB_V2_CONFIG['Common']['ServiceName'], *user_credentials_config)
+        code_deploy = create_aws_service(CODE_DEPLOY_CONFIG['Common']['ServiceName'], *user_credentials_config)
+        iam = create_aws_service(IAM_CONFIG['Common']['ServiceName'], *user_credentials_config)
+        s3 = create_aws_service(S3_CONFIG['Common']['ServiceName'], *user_credentials_config)
+        sts = create_aws_service(STS_CONFIG['Common']['ServiceName'], *user_credentials_config)
 
     ###################################################################################################################
     #                                    Creating and Configuring Clusters & Load Balancer
@@ -132,6 +118,18 @@ def main() -> None:
     ###################################################################################################################
     #                                             Deploying Flask Applications
     ###################################################################################################################
+
+    # Get aws user account
+    aws_user_account = get_aws_user_account(sts)
+
+    # Create an S3 bucket
+    create_bucket(s3, S3_CONFIG['Common']['Bucket'])
+
+    # Set bucket policies (give user and CodeDeploy access to bucket)
+    put_bucket_policy(s3, S3_CONFIG['Common'], aws_user_account, role_arn)
+
+    # Upload the server app to the created bucket
+    upload_server_app_to_s3_bucket(s3, S3_CONFIG['Common']['Bucket'])
 
     # Create an application to deploy to Cluster1 and Cluster2
     application_id = create_application(code_deploy, CODE_DEPLOY_CONFIG['Common']['ApplicationName'])
