@@ -14,36 +14,44 @@ from init_aws_service import *
 
 def main() -> None:
     ###################################################################################################################
+    #                                    Setting program arguments
+    ###################################################################################################################
+
+    parser = argparse.ArgumentParser(
+        description=('Program that creates two clusters of virtual machines and deploys a flask app to them.'
+                     'It first looks for credentials and configuration files provided by your AWS CLI '
+                     '(You can configure your AWS CLI using this command: <aws configure>). '
+                     'If not found, it offers you the option to manually enter their values using '
+                     'the arguments below:'
+                     )
+    )
+
+    sub_parser = parser.add_subparsers(title='aws arguments', dest='AWS')
+    aws_parser = sub_parser.add_parser('aws')
+
+    parser.add_argument('-r', '--reset', help="Reset user's aws account.", dest='RESET', required=False, action='store_true')
+    aws_parser.add_argument('-g', '--region', help='The region name for your AWS account.', dest='AWS_REGION_NAME', required=True, nargs=1)
+    aws_parser.add_argument('-i', '--id', help='The access key for your AWS account.', dest='AWS_ACCESS_KEY_ID', required=True, nargs=1)
+    aws_parser.add_argument('-s', '--secret', help='The secret key for your AWS account.', dest='AWS_SECRET_ACCESS_KEY', required=True,
+                            nargs=1)
+    aws_parser.add_argument('-t', '--token', help='The session key for your AWS account.', dest='AWS_SESSION_TOKEN', required=True, nargs=1)
+
+    args = parser.parse_args()
+
+    ###################################################################################################################
+    #                                    Resetting AWS account
+    ###################################################################################################################
+
+    if args.RESET:
+        # TODO: Create a reset() function.
+        exit(0)
+
+    ###################################################################################################################
     #                                    Initializing AWS services
     ###################################################################################################################
-    credentials_exists = Path(f'{Path.home()}/.aws/credentials').is_file()
-    config_exists = Path(f'{Path.home()}/.aws/config').is_file()
+    global ec2, elbv2, code_deploy, cloud_watch, iam, s3, sts
 
-    if credentials_exists and config_exists:
-        # Initialize ec2, elbv2, CodeDeploy, iam, s3, sts services with default credentials and configuration
-        ec2 = create_aws_service(EC2_CONFIG['Common']['ServiceName'])
-        elbv2 = create_aws_service(ELB_V2_CONFIG['Common']['ServiceName'])
-        code_deploy = create_aws_service(CODE_DEPLOY_CONFIG['Common']['ServiceName'])
-        cloud_watch = create_aws_service(CLOUD_WATCH_CONFIG['Common']['ServiceName'])
-        iam = create_aws_service(IAM_CONFIG['Common']['ServiceName'])
-        s3 = create_aws_service('s3')
-        sts = create_aws_service('sts')
-    else:
-        parser = argparse.ArgumentParser(
-            description=('Program that creates two clusters of virtual machines. '
-                         'It first looks for credentials and configuration files provided by your AWS CLI '
-                         '(You can configure your AWS CLI using this command: <aws configure>). '
-                         'If not found, it offers you the option to manually enter their values using '
-                         'the arguments below:'
-                         )
-        )
-        parser.add_argument('-r', help='The region name for your AWS account.', dest='AWS_REGION_NAME', required=True, nargs=1)
-        parser.add_argument('-i', help='The access key for your AWS account.', dest='AWS_ACCESS_KEY_ID', required=True, nargs=1)
-        parser.add_argument('-s', help='The secret key for your AWS account.', dest='AWS_SECRET_ACCESS_KEY', required=True, nargs=1)
-        parser.add_argument('-t', help='The session key for your AWS account.', dest='AWS_SESSION_TOKEN', required=True, nargs=1)
-
-        args = parser.parse_args()
-
+    if args.AWS:
         user_credentials_config = [
             args.AWS_REGION_NAME[0],
             args.AWS_ACCESS_KEY_ID[0],
@@ -59,6 +67,22 @@ def main() -> None:
         iam = create_aws_service(IAM_CONFIG['Common']['ServiceName'], *user_credentials_config)
         s3 = create_aws_service(S3_CONFIG['Common']['ServiceName'], *user_credentials_config)
         sts = create_aws_service(STS_CONFIG['Common']['ServiceName'], *user_credentials_config)
+
+    else:
+        credentials_exists = Path(f'{Path.home()}/.aws/credentials').is_file()
+        config_exists = Path(f'{Path.home()}/.aws/config').is_file()
+
+        if credentials_exists and config_exists:
+            # Initialize ec2, elbv2, CodeDeploy, iam, s3, sts services with default credentials and configuration
+            ec2 = create_aws_service(EC2_CONFIG['Common']['ServiceName'])
+            elbv2 = create_aws_service(ELB_V2_CONFIG['Common']['ServiceName'])
+            code_deploy = create_aws_service(CODE_DEPLOY_CONFIG['Common']['ServiceName'])
+            cloud_watch = create_aws_service(CLOUD_WATCH_CONFIG['Common']['ServiceName'])
+            iam = create_aws_service(IAM_CONFIG['Common']['ServiceName'])
+            s3 = create_aws_service('s3')
+            sts = create_aws_service('sts')
+        else:
+            parser.error('default aws credentials and configuration not found.')
 
     ###################################################################################################################
     #                                    Creating and Configuring Clusters & Load Balancer
