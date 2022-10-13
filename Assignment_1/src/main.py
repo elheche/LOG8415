@@ -73,24 +73,20 @@ def main() -> None:
     key_pair_id = create_key_pair(ec2, EC2_CONFIG['Common']['KeyPairName'])
 
     # Create 4 instances of m4.large for Cluster 1
-    ec2_instance_ids_1 = launch_ec2_instances(ec2, EC2_CONFIG['Common'] | EC2_CONFIG['Cluster1'])
+    ec2_instance_ids_1 = []
+    for instance_tag_id in range(1, 5):
+        ec2_instance_ids_1.append(
+            launch_ec2_instance(ec2, EC2_CONFIG['Common'] | EC2_CONFIG['Cluster1'], str(instance_tag_id))
+        )
 
     # Create 5 instances of t2.large for Cluster 2
-    ec2_instance_ids_2 = launch_ec2_instances(ec2, EC2_CONFIG['Common'] | EC2_CONFIG['Cluster2'])
+    ec2_instance_ids_2 = []
+    for instance_tag_id in range(5, 10):
+        ec2_instance_ids_2.append(
+            launch_ec2_instance(ec2, EC2_CONFIG['Common'] | EC2_CONFIG['Cluster2'], str(instance_tag_id))
+        )
 
     # Wait until all ec2 instance states pass to 'running'
-    wait_until_all_running(ec2, ec2_instance_ids_1 + ec2_instance_ids_2)
-
-    # Add a unique tag to each ec2 instance
-    i = 1
-    for ec2_instance_id in ec2_instance_ids_1 + ec2_instance_ids_2:
-        add_tag_to_ec2_instance(ec2, ec2_instance_id, {'Key': 'Instance', 'Value': str(i)})
-        i += 1
-
-    # Reboot all ec2 instance to update tag list
-    reboot_all_ec2_instances(ec2, ec2_instance_ids_1 + ec2_instance_ids_2)
-
-    # Wait until all ec2 instance states pass to 'running' after rebooting
     wait_until_all_running(ec2, ec2_instance_ids_1 + ec2_instance_ids_2)
 
     # Create two target groups: Cluster1 and Cluster2
@@ -191,10 +187,10 @@ def main() -> None:
     load_balancer_metrics(cloudwatch, alb_arn)
 
     # save metrics for target group 1
-    targets_metrics(cloudwatch,target_group_arn_1, alb_arn, 1)
+    targets_metrics(cloudwatch, target_group_arn_1, alb_arn, 1)
 
     # save metrics for target group 2
-    targets_metrics(cloudwatch,target_group_arn_2, alb_arn, 2)
+    targets_metrics(cloudwatch, target_group_arn_2, alb_arn, 2)
 
     ###################################################################################################################
     #                                             Deleting Everything

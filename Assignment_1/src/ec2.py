@@ -67,9 +67,11 @@ def create_key_pair(ec2: EC2Client, key_name: str) -> str:
         return key_pair_id
 
 
-def launch_ec2_instances(ec2: EC2Client, ec2_config: dict) -> list[str]:
+def launch_ec2_instance(ec2: EC2Client, ec2_config: dict, instance_tag_id: str) -> str:
+    # Add a unique tag to each ec2 instance
+    ec2_config['TagSpecifications'][0]['Tags'][1]['Value'] = instance_tag_id
     try:
-        print('Creating EC2 instances...')
+        print('Creating EC2 instance...')
         response = ec2.run_instances(
             ImageId=ec2_config['ImageId'],
             MinCount=ec2_config['InstanceCount'],
@@ -89,11 +91,9 @@ def launch_ec2_instances(ec2: EC2Client, ec2_config: dict) -> list[str]:
     except Exception as e:
         print(e)
     else:
-        ec2_instances_ids = []
-        for instance in response['Instances']:
-            ec2_instances_ids.append(instance['InstanceId'])
-        print(f'EC2 instances created successfully.\n {ec2_instances_ids}')
-        return ec2_instances_ids
+        ec2_instances_id = response['Instances'][0]['InstanceId']
+        print(f'EC2 instance created successfully.\n {ec2_instances_id}')
+        return ec2_instances_id
 
 
 def wait_until_all_running(ec2: EC2Client, instance_ids: list[str]) -> None:
