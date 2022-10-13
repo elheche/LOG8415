@@ -21,6 +21,7 @@ def main() -> None:
         ec2 = create_aws_service(EC2_CONFIG['Common']['ServiceName'])
         elbv2 = create_aws_service(ELB_V2_CONFIG['Common']['ServiceName'])
         code_deploy = create_aws_service(CODE_DEPLOY_CONFIG['Common']['ServiceName'])
+        cloud_watch = create_aws_service(CLOUD_WATCH_CONFIG['Common']['ServiceName'])
         iam = create_aws_service(IAM_CONFIG['Common']['ServiceName'])
         s3 = create_aws_service('s3')
         sts = create_aws_service('sts')
@@ -51,6 +52,7 @@ def main() -> None:
         ec2 = create_aws_service(EC2_CONFIG['Common']['ServiceName'], *user_credentials_config)
         elbv2 = create_aws_service(ELB_V2_CONFIG['Common']['ServiceName'], *user_credentials_config)
         code_deploy = create_aws_service(CODE_DEPLOY_CONFIG['Common']['ServiceName'], *user_credentials_config)
+        cloud_watch = create_aws_service(CLOUD_WATCH_CONFIG['Common']['ServiceName'], *user_credentials_config)
         iam = create_aws_service(IAM_CONFIG['Common']['ServiceName'], *user_credentials_config)
         s3 = create_aws_service(S3_CONFIG['Common']['ServiceName'], *user_credentials_config)
         sts = create_aws_service(STS_CONFIG['Common']['ServiceName'], *user_credentials_config)
@@ -175,22 +177,14 @@ def main() -> None:
     ###################################################################################################################
     #                                             Getting CloudWatch Metrics
     ###################################################################################################################
-    cloudwatch = boto3.client(
-        'cloudwatch',
-        region_name=args.AWS_REGION_NAME[0],
-        aws_access_key_id=args.AWS_ACCESS_KEY_ID[0],
-        aws_secret_access_key=args.AWS_SECRET_ACCESS_KEY[0],
-        aws_session_token=args.AWS_SESSION_TOKEN[0]
-    )
-
     # save metrics for load balancer
-    load_balancer_metrics(cloudwatch, alb_arn)
+    load_balancer_metrics(cloud_watch, alb_arn)
 
     # save metrics for target group 1
-    targets_metrics(cloudwatch, target_group_arn_1, alb_arn, 1)
+    targets_metrics(cloud_watch, target_group_arn_1, alb_arn, 1)
 
     # save metrics for target group 2
-    targets_metrics(cloudwatch, target_group_arn_2, alb_arn, 2)
+    targets_metrics(cloud_watch, target_group_arn_2, alb_arn, 2)
 
     ###################################################################################################################
     #                                             Deleting Everything

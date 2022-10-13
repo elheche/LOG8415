@@ -18,7 +18,7 @@ EC2_CONFIG = {
                 'ResourceType': 'instance',
                 'Tags': [
                     {'Key': 'Cluster', 'Value': '1', },
-                    {'Key': 'Instance', 'Value': '', } # Instance tag value is given when creating the instance
+                    {'Key': 'Instance', 'Value': '', }  # Instance tag value is given when creating the instance
                 ]
             }
         ]
@@ -31,7 +31,7 @@ EC2_CONFIG = {
                 'ResourceType': 'instance',
                 'Tags': [
                     {'Key': 'Cluster', 'Value': '2', },
-                    {'Key': 'Instance', 'Value': '', } # Instance tag value is given when creating the instance
+                    {'Key': 'Instance', 'Value': '', }  # Instance tag value is given when creating the instance
                 ]
             }
         ]
@@ -133,5 +133,11 @@ S3_CONFIG = {
 STS_CONFIG = {
     'Common': {
         'ServiceName': 'sts'
+    }
+}
+
+CLOUD_WATCH_CONFIG = {
+    'Common': {
+        'ServiceName': 'cloudwatch'
     }
 }
