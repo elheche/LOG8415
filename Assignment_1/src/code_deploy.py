@@ -51,3 +51,15 @@ def create_deployment(code_deploy: CodeDeployClient, code_deploy_config: dict) -
         deployment_id = response['deploymentId']
         print(f'Application deployment {deployment_id} launched successfully.')
         return deployment_id
+
+
+def delete_application(code_deploy: CodeDeployClient, application_name: str) -> None:
+    try:
+        print('Deleting application...')
+        code_deploy.delete_application(
+            applicationName=application_name,
+        )
+    except Exception as e:
+        print(e)
+    else:
+        print(f'Application deleted successfully.\n{application_name}')
