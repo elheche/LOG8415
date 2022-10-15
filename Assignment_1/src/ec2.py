@@ -1,3 +1,6 @@
+import time
+
+from botocore.exceptions import ClientError
 from mypy_boto3_ec2 import EC2Client
 
 
@@ -96,7 +99,7 @@ def launch_ec2_instance(ec2: EC2Client, ec2_config: dict, instance_tag_id: str) 
         return ec2_instances_id
 
 
-def wait_until_all_running(ec2: EC2Client, instance_ids: list[str]) -> None:
+def wait_until_all_ec2_instance_are_running(ec2: EC2Client, instance_ids: list[str]) -> None:
     try:
         print('Waiting until all ec2 instances are running...')
         waiter = ec2.get_waiter('instance_running')
@@ -163,41 +166,63 @@ def reboot_all_ec2_instances(ec2: EC2Client, ec2_instance_ids: list[str]) -> Non
 
 def terminate_ec2_instances(
         ec2: EC2Client,
-        ec2_instances_ids: list[str]
+        ec2_instance_ids: list[str]
 ) -> None:
     try:
         print('Terminating EC2 instances...')
-        response = ec2.terminate_instances(
-            InstanceIds=ec2_instances_ids
-        )
+        ec2.terminate_instances(InstanceIds=ec2_instance_ids)
     except Exception as e:
         print(e)
     else:
-        print(response)
-        print(f'EC2 instances terminated successfully.')
+        print(f'EC2 instances terminated successfully.\n{ec2_instance_ids}')
 
 
 def delete_key_pair(ec2: EC2Client, key_pair_id: str) -> None:
     try:
         print('Deleting key pair...')
-        response = ec2.delete_key_pair(
+        ec2.delete_key_pair(
             KeyPairId=key_pair_id
         )
     except Exception as e:
         print(e)
     else:
-        print(response)
-        print(f'Key pair {key_pair_id} deleted successfully.')
+        print(f'Key pair deleted successfully.\n{key_pair_id}')
 
 
 def delete_security_group(ec2: EC2Client, security_group_id: str) -> None:
+    MAX_ATTEMPT = 10
+    attempt = 1
+
+    while (True):
+        try:
+            print(f'Deleting security group...\nAttempt: {attempt}')
+            ec2.delete_security_group(
+                GroupId=security_group_id
+            )
+        except ClientError as e:
+            if (e.response['Error']['Code'] == 'DependencyViolation' and attempt < MAX_ATTEMPT):
+                attempt += 1
+                time.sleep(10) # wait 10s between each attempt.
+            else:
+                print(e)
+                break
+        except Exception as e:
+            print(e)
+            break
+        else:
+            print(f'Security Group deleted successfully.\n{security_group_id}')
+            break
+
+
+def wait_until_all_ec2_instances_are_terminated(ec2: EC2Client, instance_ids: list[str]) -> None:
     try:
-        print('Deleting security group...')
-        response = ec2.delete_security_group(
-            GroupId=security_group_id
+        print('Waiting until all ec2 instances are terminated...')
+        waiter = ec2.get_waiter('instance_terminated')
+        waiter.wait(
+            InstanceIds=instance_ids,
+            WaiterConfig={'Delay': 10}  # wait 10s between each attempt.
         )
     except Exception as e:
         print(e)
     else:
-        print(response)
-        print(f'Security Group {security_group_id} deleted successfully.')
+        print('All EC2 instances are now terminated.')
