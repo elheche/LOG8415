@@ -7,9 +7,9 @@ from constants import *
 from ec2 import *
 from elb import *
 from iam import *
+from init_aws_service import *
 from s3 import *
 from sts import *
-from init_aws_service import *
 
 
 def main() -> None:
@@ -29,27 +29,18 @@ def main() -> None:
     sub_parser = parser.add_subparsers(title='aws arguments', dest='AWS')
     aws_parser = sub_parser.add_parser('aws')
 
-    parser.add_argument('-r', '--reset', help="Reset user's aws account.", dest='RESET', required=False, action='store_true')
-    aws_parser.add_argument('-g', '--region', help='The region name for your AWS account.', dest='AWS_REGION_NAME', required=True, nargs=1)
-    aws_parser.add_argument('-i', '--id', help='The access key for your AWS account.', dest='AWS_ACCESS_KEY_ID', required=True, nargs=1)
-    aws_parser.add_argument('-s', '--secret', help='The secret key for your AWS account.', dest='AWS_SECRET_ACCESS_KEY', required=True,
+    parser.add_argument('-r', '--reset', help="reset user's aws account.", dest='RESET', required=False, action='store_true')
+    aws_parser.add_argument('-g', '--region', help='region name for your AWS account.', dest='AWS_REGION_NAME', required=True, nargs=1)
+    aws_parser.add_argument('-i', '--id', help='access key for your AWS account.', dest='AWS_ACCESS_KEY_ID', required=True, nargs=1)
+    aws_parser.add_argument('-s', '--secret', help='secret key for your AWS account.', dest='AWS_SECRET_ACCESS_KEY', required=True,
                             nargs=1)
-    aws_parser.add_argument('-t', '--token', help='The session key for your AWS account.', dest='AWS_SESSION_TOKEN', required=True, nargs=1)
+    aws_parser.add_argument('-t', '--token', help='session key for your AWS account.', dest='AWS_SESSION_TOKEN', required=True, nargs=1)
 
     args = parser.parse_args()
 
     ###################################################################################################################
-    #                                    Resetting AWS account
-    ###################################################################################################################
-
-    if args.RESET:
-        # TODO: Create a reset() function.
-        exit(0)
-
-    ###################################################################################################################
     #                                    Initializing AWS services
     ###################################################################################################################
-    global ec2, elbv2, code_deploy, cloud_watch, iam, s3, sts
 
     if args.AWS:
         user_credentials_config = [
@@ -83,6 +74,15 @@ def main() -> None:
             sts = create_aws_service('sts')
         else:
             parser.error('default aws credentials and configuration not found.')
+            raise
+
+    ###################################################################################################################
+    #                                    Resetting AWS account
+    ###################################################################################################################
+
+    if args.RESET:
+        reset(ec2, elbv2, s3, code_deploy)
+        exit(0)
 
     ###################################################################################################################
     #                                    Creating and Configuring Clusters & Load Balancer
@@ -98,8 +98,14 @@ def main() -> None:
     security_group_id = create_security_group(ec2, vpc_id, EC2_CONFIG['Common']['SecurityGroups'][0])
     set_security_group_inbound_rules(ec2, security_group_id)
 
+    # Save security group id to aws_data (needed to reset aws account)
+    aws_data = {'SecurityGroupId': security_group_id}
+
     # Create a key pair
     key_pair_id = create_key_pair(ec2, EC2_CONFIG['Common']['KeyPairName'])
+
+    # Save key pair id to aws_data (needed to reset aws account)
+    aws_data['KeyPairId'] = key_pair_id
 
     # Create 4 instances of m4.large for Cluster 1
     ec2_instance_ids_1 = []
@@ -115,12 +121,18 @@ def main() -> None:
             launch_ec2_instance(ec2, EC2_CONFIG['Common'] | EC2_CONFIG['Cluster2'], str(instance_tag_id))
         )
 
+    # Save ec2 instance ids to aws_data (needed to reset aws account)
+    aws_data['EC2InstanceIds'] = ec2_instance_ids_1 + ec2_instance_ids_2
+
     # Wait until all ec2 instance states pass to 'running'
-    wait_until_all_running(ec2, ec2_instance_ids_1 + ec2_instance_ids_2)
+    wait_until_all_ec2_instance_are_running(ec2, ec2_instance_ids_1 + ec2_instance_ids_2)
 
     # Create two target groups: Cluster1 and Cluster2
     target_group_arn_1 = create_target_group(elbv2, ELB_V2_CONFIG['Cluster1']['TargetGroupName'], vpc_id)
     target_group_arn_2 = create_target_group(elbv2, ELB_V2_CONFIG['Cluster2']['TargetGroupName'], vpc_id)
+
+    # Save target group arns to aws_data (needed to reset aws account)
+    aws_data['TargetGroups'] = [target_group_arn_1, target_group_arn_2]
 
     # Register m4.large instances to Cluster1
     register_targets(elbv2, target_group_arn_1, ec2_instance_ids_1)
@@ -131,8 +143,14 @@ def main() -> None:
     subnet_ids = get_subnet_ids(ec2, vpc_id, [EC2_CONFIG['Cluster1']['AvailabilityZone'], EC2_CONFIG['Cluster2']['AvailabilityZone']])
     alb_arn = create_application_load_balancer(elbv2, subnet_ids, [security_group_id])
 
+    # Save alb arn to aws_data (needed to reset aws account)
+    aws_data['AlbArn'] = alb_arn
+
     # Create an ALB listener
     alb_listener_arn = create_alb_listener(elbv2, alb_arn, [target_group_arn_1, target_group_arn_2])
+
+    # Save alb listener arn to aws_data (needed to reset aws account)
+    aws_data['AlbListenerArn'] = alb_listener_arn
 
     # Create rule 1 in the last listener to forward requests to cluster 1
     alb_listener_rule_1_arn = create_alb_listener_rule(
@@ -152,6 +170,9 @@ def main() -> None:
         ELB_V2_CONFIG['Cluster2']['RulePriority']
     )
 
+    # Save rule ARNs to aws_data (needed to reset aws account)
+    aws_data['RuleArns'] = [alb_listener_rule_1_arn, alb_listener_rule_2_arn]
+
     ###################################################################################################################
     #                                             Deploying Flask Application
     ###################################################################################################################
@@ -162,6 +183,9 @@ def main() -> None:
     # Create an S3 bucket
     create_bucket(s3, S3_CONFIG['Common']['Bucket'])
 
+    # Save bucket name to aws_data (needed to reset aws account)
+    aws_data['Bucket'] = S3_CONFIG['Common']['Bucket']
+
     # Set bucket policies (give user and CodeDeploy access to bucket)
     put_bucket_policy(s3, S3_CONFIG['Common'], aws_user_account, role_arn)
 
@@ -169,31 +193,37 @@ def main() -> None:
     upload_server_app_to_s3_bucket(s3, S3_CONFIG['Common']['Bucket'])
 
     # Create an application to deploy to Cluster1 and Cluster2
-    application_id = create_application(code_deploy, CODE_DEPLOY_CONFIG['Common']['ApplicationName'])
+    create_application(code_deploy, CODE_DEPLOY_CONFIG['Common']['ApplicationName'])
+
+    # Save application name to aws_data (needed to reset aws account)
+    aws_data['ApplicationName'] = CODE_DEPLOY_CONFIG['Common']['ApplicationName']
 
     # Create two deployment groups Cluster1 and Cluster 2 to target ec2 instances that belong to these clusters
-    deployment_group_id_1 = create_deployment_group(
+    create_deployment_group(
         code_deploy,
         CODE_DEPLOY_CONFIG['Common'] | CODE_DEPLOY_CONFIG['Cluster1'],
         role_arn
     )
 
-    deployment_group_id_2 = create_deployment_group(
+    create_deployment_group(
         code_deploy,
         CODE_DEPLOY_CONFIG['Common'] | CODE_DEPLOY_CONFIG['Cluster2'],
         role_arn
     )
 
     # Launch two app deployments, the first deploys to Cluster1, the second deploys to Cluster2
-    deployment_id_1 = create_deployment(
+    create_deployment(
         code_deploy,
         CODE_DEPLOY_CONFIG['Common'] | CODE_DEPLOY_CONFIG['Cluster1']
     )
 
-    deployment_id_2 = create_deployment(
+    create_deployment(
         code_deploy,
         CODE_DEPLOY_CONFIG['Common'] | CODE_DEPLOY_CONFIG['Cluster2']
     )
+
+    # Export aws_data to aws_data.json file (needed to execute -r/--reset command)
+    save_aws_data(aws_data, 'aws_data.json')
 
     ###################################################################################################################
     #                                             Code to Run Docker Image to Request Clusters
@@ -204,6 +234,7 @@ def main() -> None:
     ###################################################################################################################
     #                                             Getting CloudWatch Metrics
     ###################################################################################################################
+
     # save metrics for load balancer
     load_balancer_metrics(cloud_watch, alb_arn)
 
@@ -213,33 +244,57 @@ def main() -> None:
     # save metrics for target group 2
     targets_metrics(cloud_watch, target_group_arn_2, alb_arn, 2)
 
-    ###################################################################################################################
-    #                                             Deleting Everything
-    ###################################################################################################################
 
-    # Delete rule 1
-    delete_alb_listener_rule(elbv2, rule_arn=alb_listener_rule_1_arn)
+def save_aws_data(data: dict, path: str) -> None:
+    try:
+        print('Saving aws data...')
+        with open(path, 'w') as file:
+            json.dump(data, file)
+    except Exception as e:
+        print(e)
+    else:
+        print(f'AWS data saved successfully to {path}.')
 
-    # Delete rule 2
-    delete_alb_listener_rule(elbv2, rule_arn=alb_listener_rule_2_arn)
 
-    # Delete the application load balancer (this will delete the ALB listener
-    delete_application_load_balancer(elbv2, load_balancer_arn=alb_arn)
+def load_aws_data(path: str) -> dict:
+    try:
+        print('Loading aws data...')
+        with open(path, 'r') as file:
+            data = json.load(file)
+    except Exception as e:
+        print(e)
+    else:
+        print(f'AWS data loaded successfully.\n{data}')
+        return data
 
-    # Delete Target Group 1
-    delete_target_group(elbv2, target_group_arn=target_group_arn_1)
 
-    # Delete Target Group 2
-    delete_target_group(elbv2, target_group_arn=target_group_arn_2)
+def reset(
+        ec2: EC2Client,
+        elbv2: ElasticLoadBalancingv2Client,
+        s3: S3Client,
+        code_deploy: CodeDeployClient
+) -> None:
+    data_exists = Path('aws_data.json').is_file()
 
-    # Terminate all instances of t2.large and m4.large
-    terminate_ec2_instances(ec2, ec2_instances_ids=ec2_instance_ids_1 + ec2_instance_ids_2)
-
-    # Delete Key Pair
-    delete_key_pair(ec2, key_pair_id=key_pair_id)
-
-    # Delete Security Group
-    delete_security_group(ec2, security_group_id=security_group_id)
+    if data_exists:
+        data = load_aws_data('aws_data.json')
+        terminate_ec2_instances(ec2, data['EC2InstanceIds'])
+        wait_until_all_ec2_instances_are_terminated(ec2, data['EC2InstanceIds'])
+        for rule_arn in data['RuleArns']:
+            delete_alb_listener_rule(elbv2, rule_arn)
+        delete_alb_listener(elbv2, data['AlbListenerArn'])
+        delete_application_load_balancer(elbv2, data['AlbArn'])
+        wait_until_alb_is_deleted(elbv2, data['AlbArn'])
+        for target_group_arn in data['TargetGroups']:
+            delete_target_group(elbv2, target_group_arn)
+        delete_key_pair(ec2, data['KeyPairId'])
+        delete_security_group(ec2, data['SecurityGroupId'])
+        delete_server_app_from_s3_bucket(s3, data['Bucket'])
+        delete_bucket(s3, data['Bucket'])
+        delete_application(code_deploy, data['ApplicationName'])
+        print('AWS account successfully reset.')
+    else:
+        print('aws_data.json file not found.')
 
 
 if __name__ == '__main__':
