@@ -1,3 +1,5 @@
+import sys
+
 from mypy_boto3_codedeploy import CodeDeployClient
 
 
@@ -10,6 +12,7 @@ def create_application(code_deploy: CodeDeployClient, application_name: str) -> 
         )
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         application_id = response['applicationId']
         print(f'Application created successfully.\n{application_id}')
@@ -30,6 +33,7 @@ def create_deployment_group(code_deploy: CodeDeployClient, code_deploy_config: d
         )
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         deployment_group_id = response['deploymentGroupId']
         print(f'Deployment group created successfully.\n{deployment_group_id}')
@@ -47,6 +51,7 @@ def create_deployment(code_deploy: CodeDeployClient, code_deploy_config: dict) -
         )
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         deployment_id = response['deploymentId']
         print(f'Application deployment launched successfully.\n{deployment_id}')
@@ -61,5 +66,6 @@ def delete_application(code_deploy: CodeDeployClient, application_name: str) -> 
         )
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         print(f'Application deleted successfully.\n{application_name}')

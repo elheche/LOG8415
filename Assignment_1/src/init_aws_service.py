@@ -1,3 +1,5 @@
+import sys
+
 import boto3
 from typing import Literal
 
@@ -20,6 +22,7 @@ def create_aws_service(
         )
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         print(f'{aws_service_name} service created successfully.')
         return aws_service

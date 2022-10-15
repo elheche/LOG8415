@@ -1,3 +1,5 @@
+import sys
+
 from mypy_boto3_elbv2 import ElasticLoadBalancingv2Client
 
 
@@ -20,6 +22,7 @@ def create_target_group(
         )
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         target_group_arn = response['TargetGroups'][0]['TargetGroupArn']
         print(f'Target group created successfully.\n{target_group_arn}')
@@ -39,6 +42,7 @@ def register_targets(
         )
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         print(f'Targets registered successfully to group target {target_group_arn}.\n{ec2_instance_ids}')
 
@@ -60,6 +64,7 @@ def create_application_load_balancer(
         )
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         alb_arn = response['LoadBalancers'][0]['LoadBalancerArn']
         print(f'Application load balancer created successfully.\n{alb_arn}')
@@ -97,6 +102,7 @@ def create_alb_listener(
         )
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         alb_listener_arn = response['Listeners'][0]['ListenerArn']
         print(f'ALB listener created successfully.\n{alb_listener_arn}')
@@ -132,6 +138,7 @@ def create_alb_listener_rule(
         )
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         alb_listener_rule_arn = response['Rules'][0]['RuleArn']
         print(f'ALB listener rule created successfully.\n{alb_listener_rule_arn}')
@@ -149,6 +156,7 @@ def delete_alb_listener_rule(
         )
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         print(f'ALB listener rule deleted successfully.\n{rule_arn}')
 
@@ -164,6 +172,7 @@ def delete_alb_listener(
         )
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         print(f'ALB listener deleted successfully.\n{alb_listener_arn}')
 
@@ -179,6 +188,7 @@ def delete_application_load_balancer(
         )
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         print(f'Application load balancer deleted successfully.\n{load_balancer_arn}')
 
@@ -196,6 +206,7 @@ def wait_until_alb_is_deleted(
         )
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         print('ALB is now deleted.')
 
@@ -211,5 +222,6 @@ def delete_target_group(
         )
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         print(f'Target Group deleted successfully.\n{target_group_arn}')

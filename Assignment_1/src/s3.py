@@ -1,5 +1,6 @@
 import json
 import shutil
+import sys
 
 from mypy_boto3_s3 import S3Client
 
@@ -10,6 +11,7 @@ def create_bucket(s3: S3Client, bucket: str) -> None:
         s3.create_bucket(Bucket=bucket)
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         print(f'S3 bucket created successfully.\n{bucket}')
 
@@ -26,6 +28,7 @@ def put_bucket_policy(s3: S3Client, s3_config: dict, aws_user_account: str, role
         )
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         print(f'Policy successfully applied to bucket {s3_config["Bucket"]}')
 
@@ -37,6 +40,7 @@ def upload_server_app_to_s3_bucket(s3: S3Client, bucket: str) -> None:
         s3.upload_file('./server.zip', bucket, 'server.zip')
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         print(f'Server app successfully uploaded to bucket {bucket}')
 
@@ -47,6 +51,7 @@ def delete_server_app_from_s3_bucket(s3: S3Client, bucket: str) -> None:
         s3.delete_object(Bucket=bucket, Key='server.zip')
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         print(f'Server app successfully deleted from bucket {bucket}')
 
@@ -57,5 +62,6 @@ def delete_bucket(s3: S3Client, bucket: str) -> None:
         s3.delete_bucket(Bucket=bucket)
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         print(f'S3 bucket deleted successfully.\n{bucket}')

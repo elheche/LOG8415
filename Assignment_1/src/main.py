@@ -10,6 +10,7 @@ from iam import *
 from init_aws_service import *
 from s3 import *
 from sts import *
+import sys
 
 
 def main() -> None:
@@ -74,7 +75,7 @@ def main() -> None:
             sts = create_aws_service('sts')
         else:
             parser.error('default aws credentials and configuration not found.')
-            raise
+            sys.exit(1)
 
     ###################################################################################################################
     #                                    Resetting AWS account
@@ -82,7 +83,7 @@ def main() -> None:
 
     if args.RESET:
         reset(ec2, elbv2, s3, code_deploy)
-        exit(0)
+        sys.exit(0)
 
     ###################################################################################################################
     #                                    Creating and Configuring Clusters & Load Balancer
@@ -252,6 +253,7 @@ def save_aws_data(aws_data: dict, path: str) -> None:
             json.dump(aws_data, file)
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         print(f'AWS data saved successfully to {path}.')
 
@@ -263,6 +265,7 @@ def load_aws_data(path: str) -> dict:
             aws_data = json.load(file)
     except Exception as e:
         print(e)
+        sys.exit(1)
     else:
         print(f'AWS data loaded successfully.\n{aws_data}')
         return aws_data
