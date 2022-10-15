@@ -144,14 +144,28 @@ def delete_alb_listener_rule(
 ) -> None:
     try:
         print('Deleting ALB listener rule...')
-        response = elbv2.delete_rule(
+        elbv2.delete_rule(
             RuleArn=rule_arn
         )
     except Exception as e:
         print(e)
     else:
-        print(response)
-        print(f'ALB listener rule deleted successfully.')
+        print(f'ALB listener rule deleted successfully.\n{rule_arn}')
+
+
+def delete_alb_listener(
+        elbv2: ElasticLoadBalancingv2Client,
+        alb_listener_arn: str,
+) -> None:
+    try:
+        print('Deleting ALB listener...')
+        elbv2.delete_listener(
+            ListenerArn=alb_listener_arn
+        )
+    except Exception as e:
+        print(e)
+    else:
+        print(f'ALB listener deleted successfully.\n{alb_listener_arn}')
 
 
 def delete_application_load_balancer(
@@ -160,14 +174,30 @@ def delete_application_load_balancer(
 ) -> None:
     try:
         print('Deleting application load_balancer...')
-        response = elbv2.delete_load_balancer(
+        elbv2.delete_load_balancer(
             LoadBalancerArn=load_balancer_arn
         )
     except Exception as e:
         print(e)
     else:
-        print(response)
-        print(f'Application load balancer deleted successfully.')
+        print(f'Application load balancer deleted successfully.\n{load_balancer_arn}')
+
+
+def wait_until_alb_is_deleted(
+        elbv2: ElasticLoadBalancingv2Client,
+        load_balancer_arn: str
+) -> None:
+    try:
+        print('Waiting until alb is deleted...')
+        waiter = elbv2.get_waiter('load_balancers_deleted')
+        waiter.wait(
+            LoadBalancerArns=[load_balancer_arn],
+            WaiterConfig={'Delay': 10}  # wait 10s between each attempt.
+        )
+    except Exception as e:
+        print(e)
+    else:
+        print('ALB is now deleted.')
 
 
 def delete_target_group(
@@ -176,11 +206,10 @@ def delete_target_group(
 ) -> None:
     try:
         print('Deleting target group...')
-        response = elbv2.delete_target_group(
+        elbv2.delete_target_group(
             TargetGroupArn=target_group_arn
         )
     except Exception as e:
         print(e)
     else:
-        print(response)
-        print(f'Target Group deleted successfully.')
+        print(f'Target Group deleted successfully.\n{target_group_arn}')
