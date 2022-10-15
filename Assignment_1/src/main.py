@@ -245,11 +245,11 @@ def main() -> None:
     targets_metrics(cloud_watch, target_group_arn_2, alb_arn, 2)
 
 
-def save_aws_data(data: dict, path: str) -> None:
+def save_aws_data(aws_data: dict, path: str) -> None:
     try:
         print('Saving aws data...')
         with open(path, 'w') as file:
-            json.dump(data, file)
+            json.dump(aws_data, file)
     except Exception as e:
         print(e)
     else:
@@ -260,12 +260,12 @@ def load_aws_data(path: str) -> dict:
     try:
         print('Loading aws data...')
         with open(path, 'r') as file:
-            data = json.load(file)
+            aws_data = json.load(file)
     except Exception as e:
         print(e)
     else:
-        print(f'AWS data loaded successfully.\n{data}')
-        return data
+        print(f'AWS data loaded successfully.\n{aws_data}')
+        return aws_data
 
 
 def reset(
@@ -277,21 +277,21 @@ def reset(
     data_exists = Path('aws_data.json').is_file()
 
     if data_exists:
-        data = load_aws_data('aws_data.json')
-        terminate_ec2_instances(ec2, data['EC2InstanceIds'])
-        wait_until_all_ec2_instances_are_terminated(ec2, data['EC2InstanceIds'])
-        for rule_arn in data['RuleArns']:
+        aws_data = load_aws_data('aws_data.json')
+        terminate_ec2_instances(ec2, aws_data['EC2InstanceIds'])
+        wait_until_all_ec2_instances_are_terminated(ec2, aws_data['EC2InstanceIds'])
+        for rule_arn in aws_data['RuleArns']:
             delete_alb_listener_rule(elbv2, rule_arn)
-        delete_alb_listener(elbv2, data['AlbListenerArn'])
-        delete_application_load_balancer(elbv2, data['AlbArn'])
-        wait_until_alb_is_deleted(elbv2, data['AlbArn'])
-        for target_group_arn in data['TargetGroups']:
+        delete_alb_listener(elbv2, aws_data['AlbListenerArn'])
+        delete_application_load_balancer(elbv2, aws_data['AlbArn'])
+        wait_until_alb_is_deleted(elbv2, aws_data['AlbArn'])
+        for target_group_arn in aws_data['TargetGroups']:
             delete_target_group(elbv2, target_group_arn)
-        delete_key_pair(ec2, data['KeyPairId'])
-        delete_security_group(ec2, data['SecurityGroupId'])
-        delete_server_app_from_s3_bucket(s3, data['Bucket'])
-        delete_bucket(s3, data['Bucket'])
-        delete_application(code_deploy, data['ApplicationName'])
+        delete_key_pair(ec2, aws_data['KeyPairId'])
+        delete_security_group(ec2, aws_data['SecurityGroupId'])
+        delete_server_app_from_s3_bucket(s3, aws_data['Bucket'])
+        delete_bucket(s3, aws_data['Bucket'])
+        delete_application(code_deploy, aws_data['ApplicationName'])
         print('AWS account successfully reset.')
     else:
         print('aws_data.json file not found.')

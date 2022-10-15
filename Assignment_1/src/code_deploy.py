@@ -12,7 +12,7 @@ def create_application(code_deploy: CodeDeployClient, application_name: str) -> 
         print(e)
     else:
         application_id = response['applicationId']
-        print(f'Application {application_id} created successfully.')
+        print(f'Application created successfully.\n{application_id}')
         return application_id
 
 
@@ -32,7 +32,7 @@ def create_deployment_group(code_deploy: CodeDeployClient, code_deploy_config: d
         print(e)
     else:
         deployment_group_id = response['deploymentGroupId']
-        print(f'Deployment group {deployment_group_id} created successfully.')
+        print(f'Deployment group created successfully.\n{deployment_group_id}')
         return deployment_group_id
 
 
@@ -49,7 +49,7 @@ def create_deployment(code_deploy: CodeDeployClient, code_deploy_config: dict) -
         print(e)
     else:
         deployment_id = response['deploymentId']
-        print(f'Application deployment {deployment_id} launched successfully.')
+        print(f'Application deployment launched successfully.\n{deployment_id}')
         return deployment_id
 
 

@@ -22,7 +22,7 @@ def create_target_group(
         print(e)
     else:
         target_group_arn = response['TargetGroups'][0]['TargetGroupArn']
-        print(f'Target group {target_group_arn} created successfully.')
+        print(f'Target group created successfully.\n{target_group_arn}')
         return target_group_arn
 
 
@@ -40,7 +40,7 @@ def register_targets(
     except Exception as e:
         print(e)
     else:
-        print(f'Targets {ec2_instance_ids} registered successfully to group target {target_group_arn}.')
+        print(f'Targets registered successfully to group target {target_group_arn}.\n{ec2_instance_ids}')
 
 
 def create_application_load_balancer(
@@ -62,7 +62,7 @@ def create_application_load_balancer(
         print(e)
     else:
         alb_arn = response['LoadBalancers'][0]['LoadBalancerArn']
-        print(f'Application load balancer {alb_arn} created successfully.')
+        print(f'Application load balancer created successfully.\n{alb_arn}')
         return alb_arn
 
 
@@ -99,7 +99,7 @@ def create_alb_listener(
         print(e)
     else:
         alb_listener_arn = response['Listeners'][0]['ListenerArn']
-        print(f'ALB listener {alb_listener_arn} created successfully.')
+        print(f'ALB listener created successfully.\n{alb_listener_arn}')
         return alb_listener_arn
 
 
@@ -134,7 +134,7 @@ def create_alb_listener_rule(
         print(e)
     else:
         alb_listener_rule_arn = response['Rules'][0]['RuleArn']
-        print(f'ALB listener rule {alb_listener_rule_arn} created successfully.')
+        print(f'ALB listener rule created successfully.\n{alb_listener_rule_arn}')
         return alb_listener_rule_arn
 
 

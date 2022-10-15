@@ -12,7 +12,7 @@ def get_vpc_id(ec2: EC2Client) -> str:
         print(e)
     else:
         vpc_id = response.get('Vpcs', [{}])[0].get('VpcId', '')
-        print(f'vpc id obtained successfully.\n {vpc_id}')
+        print(f'vpc id obtained successfully.\n{vpc_id}')
         return vpc_id
 
 
@@ -28,7 +28,7 @@ def create_security_group(ec2: EC2Client, vpc_id: str, group_name: str) -> str:
         print(e)
     else:
         security_group_id = response['GroupId']
-        print(f'Security group {security_group_id} created successfully.')
+        print(f'Security group created successfully.\n{security_group_id}')
         return security_group_id
 
 
@@ -66,7 +66,7 @@ def create_key_pair(ec2: EC2Client, key_name: str) -> str:
         print(e)
     else:
         key_pair_id = key_pair.get('KeyPairId')
-        print(f'Key pair {key_pair.get("KeyPairId")} created successfully.')
+        print(f'Key pair created successfully.\n{key_pair_id}')
         return key_pair_id
 
 
@@ -95,7 +95,7 @@ def launch_ec2_instance(ec2: EC2Client, ec2_config: dict, instance_tag_id: str) 
         print(e)
     else:
         ec2_instances_id = response['Instances'][0]['InstanceId']
-        print(f'EC2 instance created successfully.\n {ec2_instances_id}')
+        print(f'EC2 instance created successfully.\n{ec2_instances_id}')
         return ec2_instances_id
 
 
@@ -132,7 +132,7 @@ def get_subnet_ids(ec2: EC2Client, vpc_id: str, availability_zone: list[str]) ->
         print(e)
     else:
         subnet_ids = [subnet['SubnetId'] for subnet in response['Subnets']]
-        print(f'Subnet ids obtained successfully.\n {subnet_ids}')
+        print(f'Subnet ids obtained successfully.\n{subnet_ids}')
         return subnet_ids
 
 
@@ -202,7 +202,7 @@ def delete_security_group(ec2: EC2Client, security_group_id: str) -> None:
         except ClientError as e:
             if (e.response['Error']['Code'] == 'DependencyViolation' and attempt < MAX_ATTEMPT):
                 attempt += 1
-                time.sleep(10) # wait 10s between each attempt.
+                time.sleep(10)  # wait 10s between each attempt.
             else:
                 print(e)
                 break
