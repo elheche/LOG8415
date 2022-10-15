@@ -6,7 +6,7 @@ from mypy_boto3_s3 import S3Client
 
 def create_bucket(s3: S3Client, bucket: str) -> None:
     try:
-        print('Creating a S3 bucket...')
+        print('Creating an S3 bucket...')
         s3.create_bucket(Bucket=bucket)
     except Exception as e:
         print(e)
@@ -39,3 +39,23 @@ def upload_server_app_to_s3_bucket(s3: S3Client, bucket: str) -> None:
         print(e)
     else:
         print(f'Server app successfully uploaded to bucket {bucket}')
+
+
+def delete_server_app_from_s3_bucket(s3: S3Client, bucket: str) -> None:
+    try:
+        print('Deleting a server app from an S3 Bucket...')
+        s3.delete_object(Bucket=bucket, Key='server.zip')
+    except Exception as e:
+        print(e)
+    else:
+        print(f'Server app successfully deleted from bucket {bucket}')
+
+
+def delete_bucket(s3: S3Client, bucket: str) -> None:
+    try:
+        print('Deleting an S3 bucket...')
+        s3.delete_bucket(Bucket=bucket)
+    except Exception as e:
+        print(e)
+    else:
+        print(f'S3 bucket deleted successfully.\n{bucket}')
