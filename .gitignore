@@ -347,4 +347,7 @@ mypy_boto3_output/
 # aws data
 aws_data.json
 
+# CloudWatch metrics
+cloudWatch/
+
 # End of https://www.toptal.com/developers/gitignore/api/python,pycharm,macos,windows
