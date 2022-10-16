@@ -1,10 +1,14 @@
 import boto3
 import os
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta, datetime, timezone
 import json
+import os
 
 
 def save_data(json_file_name, data):
+    dir = json_file_name[:json_file_name.rfind('/')]
+    if not os.path.exists(dir):
+        os.makedirs(dir)
     with open(json_file_name, 'w') as fp:
         json.dump(data, fp, indent=4, sort_keys=True, default=str)
 
@@ -12,95 +16,7 @@ def save_data(json_file_name, data):
 ###################################################################################################################
 #                                             Load Balancer CloudWatch metric
 ###################################################################################################################
-
-def ActiveConnectionCount_metric(cloudwatch_client, lbstring2, yesterday, tomorrow):
-    response = cloudwatch_client.get_metric_data(
-        MetricDataQueries=[
-            {
-                'Id': 'myrequest_ActiveConnectionCount',
-                'MetricStat': {
-                    'Metric': {
-                        'Namespace': 'AWS/ApplicationELB',
-                        'MetricName': 'ActiveConnectionCount',
-                        'Dimensions': [
-                            {
-                                'Name': 'LoadBalancer',
-                                'Value': lbstring2
-                            },
-                        ]
-                    },
-                    'Period': 300,
-                    'Stat': 'Sum',
-                    'Unit': 'Count'
-                }
-            },
-        ],
-        StartTime=datetime(yesterday.year, yesterday.month, yesterday.day),
-        EndTime=datetime(tomorrow.year, tomorrow.month, tomorrow.day),
-    )
-
-    return response
-
-
-def ConsumedLCUs_metric(cloudwatch_client, lbstring2, yesterday, tomorrow):
-    response = cloudwatch_client.get_metric_data(
-        MetricDataQueries=[
-            {
-                'Id': 'myrequest_ConsumedLCUs',
-                'MetricStat': {
-                    'Metric': {
-                        'Namespace': 'AWS/ApplicationELB',
-                        'MetricName': 'ConsumedLCUs',
-                        'Dimensions': [
-                            {
-                                'Name': 'LoadBalancer',
-                                'Value': lbstring2
-                            },
-                        ]
-                    },
-                    'Period': 300,
-                    'Stat': 'Sum',
-                    'Unit': 'Count'
-                }
-            },
-        ],
-        StartTime=datetime(yesterday.year, yesterday.month, yesterday.day),
-        EndTime=datetime(tomorrow.year, tomorrow.month, tomorrow.day),
-    )
-
-    return response
-
-
-def HTTP_Redirect_Count_metric(cloudwatch_client, lbstring2, yesterday, tomorrow):
-    response = cloudwatch_client.get_metric_data(
-        MetricDataQueries=[
-            {
-                'Id': 'myrequest_HTTP_Redirect_Count',
-                'MetricStat': {
-                    'Metric': {
-                        'Namespace': 'AWS/ApplicationELB',
-                        'MetricName': 'HTTP_Redirect_Count',
-                        'Dimensions': [
-                            {
-                                'Name': 'LoadBalancer',
-                                'Value': lbstring2
-                            },
-                        ]
-                    },
-                    'Period': 300,
-                    'Stat': 'Sum',
-                    'Unit': 'Count'
-                }
-            },
-        ],
-        StartTime=datetime(yesterday.year, yesterday.month, yesterday.day),
-        EndTime=datetime(tomorrow.year, tomorrow.month, tomorrow.day),
-    )
-
-    return response
-
-
-def LB_RequestCount_metric(cloudwatch_client, lbstring2, yesterday, tomorrow):
+def RequestCount_metric(cloudwatch_client, lbstring, StartTime, EndTime):
     response = cloudwatch_client.get_metric_data(
         MetricDataQueries=[
             {
@@ -112,24 +28,145 @@ def LB_RequestCount_metric(cloudwatch_client, lbstring2, yesterday, tomorrow):
                         'Dimensions': [
                             {
                                 'Name': 'LoadBalancer',
-                                'Value': lbstring2
+                                'Value': lbstring
                             },
                         ]
                     },
-                    'Period': 300,
+                    'Period': 60,
                     'Stat': 'Sum',
                     'Unit': 'Count'
-                }
+                },
+                'ReturnData': True,
             },
         ],
-        StartTime=datetime(yesterday.year, yesterday.month, yesterday.day),
-        EndTime=datetime(tomorrow.year, tomorrow.month, tomorrow.day),
+        StartTime=StartTime,
+        EndTime=EndTime,
     )
 
     return response
 
 
-def RuleEvaluations_metric(cloudwatch_client, lbstring2, yesterday, tomorrow):
+def ActiveConnectionCount_metric(cloudwatch_client, lbstring, StartTime, EndTime):
+    response = cloudwatch_client.get_metric_data(
+        MetricDataQueries=[
+            {
+                'Id': 'myrequest_ActiveConnectionCount',
+                'MetricStat': {
+                    'Metric': {
+                        'Namespace': 'AWS/ApplicationELB',
+                        'MetricName': 'ActiveConnectionCount',
+                        'Dimensions': [
+                            {
+                                'Name': 'LoadBalancer',
+                                'Value': lbstring
+                            },
+                        ]
+                    },
+                    'Period': 60,
+                    'Stat': 'Sum',
+                    'Unit': 'Count'
+                },
+                'ReturnData': True,
+            },
+        ],
+        StartTime=StartTime,
+        EndTime=EndTime,
+    )
+
+    return response
+
+
+def ConsumedLCUs_metric(cloudwatch_client, lbstring, StartTime, EndTime):
+    response = cloudwatch_client.get_metric_data(
+        MetricDataQueries=[
+            {
+                'Id': 'myrequest_ConsumedLCUs',
+                'MetricStat': {
+                    'Metric': {
+                        'Namespace': 'AWS/ApplicationELB',
+                        'MetricName': 'ConsumedLCUs',
+                        'Dimensions': [
+                            {
+                                'Name': 'LoadBalancer',
+                                'Value': lbstring
+                            },
+                        ]
+                    },
+                    'Period': 60,
+                    'Stat': 'Sum',
+                    'Unit': 'Count'
+                },
+                'ReturnData': True,
+            },
+        ],
+        StartTime=StartTime,
+        EndTime=EndTime,
+    )
+
+    return response
+
+
+def HTTP_Redirect_Count_metric(cloudwatch_client, lbstring, StartTime, EndTime):
+    response = cloudwatch_client.get_metric_data(
+        MetricDataQueries=[
+            {
+                'Id': 'myrequest_HTTP_Redirect_Count',
+                'MetricStat': {
+                    'Metric': {
+                        'Namespace': 'AWS/ApplicationELB',
+                        'MetricName': 'HTTP_Redirect_Count',
+                        'Dimensions': [
+                            {
+                                'Name': 'LoadBalancer',
+                                'Value': lbstring
+                            },
+                        ]
+                    },
+                    'Period': 60,
+                    'Stat': 'Sum',
+                    'Unit': 'Count'
+                },
+                'ReturnData': True,
+            },
+        ],
+        StartTime=StartTime,
+        EndTime=EndTime,
+    )
+
+    return response
+
+
+def LB_RequestCount_metric(cloudwatch_client, lbstring, StartTime, EndTime):
+    response = cloudwatch_client.get_metric_data(
+        MetricDataQueries=[
+            {
+                'Id': 'myrequest_RequestCount',
+                'MetricStat': {
+                    'Metric': {
+                        'Namespace': 'AWS/ApplicationELB',
+                        'MetricName': 'RequestCount',
+                        'Dimensions': [
+                            {
+                                'Name': 'LoadBalancer',
+                                'Value': lbstring
+                            },
+                        ]
+                    },
+                    'Period': 60,
+                    'Stat': 'Sum',
+                    'Unit': 'Count'
+                },
+                'ReturnData': True,
+            },
+        ],
+        StartTime=StartTime,
+        EndTime=EndTime,
+    )
+
+    return response
+
+
+def RuleEvaluations_metric(cloudwatch_client, lbstring, StartTime, EndTime):
     response = cloudwatch_client.get_metric_data(
         MetricDataQueries=[
             {
@@ -141,18 +178,19 @@ def RuleEvaluations_metric(cloudwatch_client, lbstring2, yesterday, tomorrow):
                         'Dimensions': [
                             {
                                 'Name': 'LoadBalancer',
-                                'Value': lbstring2
+                                'Value': lbstring
                             },
                         ]
                     },
-                    'Period': 300,
+                    'Period': 60,
                     'Stat': 'Sum',
                     'Unit': 'Count'
-                }
+                },
+                'ReturnData': True,
             },
         ],
-        StartTime=datetime(yesterday.year, yesterday.month, yesterday.day),
-        EndTime=datetime(tomorrow.year, tomorrow.month, tomorrow.day),
+        StartTime=StartTime,
+        EndTime=EndTime,
     )
 
     return response
@@ -162,7 +200,7 @@ def RuleEvaluations_metric(cloudwatch_client, lbstring2, yesterday, tomorrow):
 #                                             Targets CloudWatch metric
 ###################################################################################################################
 
-def HealthyHostCount_metric(cloudwatch_client, tgstring, lbstring2, yesterday, tomorrow):
+def HealthyHostCount_metric(cloudwatch_client, tgstring, lbstring, StartTime, EndTime):
     response = cloudwatch_client.get_metric_data(
         MetricDataQueries=[
             {
@@ -178,32 +216,33 @@ def HealthyHostCount_metric(cloudwatch_client, tgstring, lbstring2, yesterday, t
                             },
                             {
                                 'Name': 'LoadBalancer',
-                                'Value': lbstring2
+                                'Value': lbstring
                             },
                         ]
                     },
-                    'Period': 300,
+                    'Period': 60,
                     'Stat': 'Average',
                     'Unit': 'Count'
-                }
+                },
+                'ReturnData': True,
             },
         ],
-        StartTime=datetime(yesterday.year, yesterday.month, yesterday.day),
-        EndTime=datetime(tomorrow.year, tomorrow.month, tomorrow.day),
+        StartTime=StartTime,
+        EndTime=EndTime,
     )
 
     return response
 
 
-def RequestCountPerTarget_metric(cloudwatch_client, tgstring, lbstring2, yesterday, tomorrow):
+def RequestCountPerTarget_metric(cloudwatch_client, tgstring, lbstring, StartTime, EndTime):
     response = cloudwatch_client.get_metric_data(
         MetricDataQueries=[
             {
-                'Id': 'myrequest_RequestCountPerTarget',
+                'Id': 'myrequest_RequestCount',
                 'MetricStat': {
                     'Metric': {
                         'Namespace': 'AWS/ApplicationELB',
-                        'MetricName': 'RequestCountPerTarget',
+                        'MetricName': 'RequestCount',
                         'Dimensions': [
                             {
                                 'Name': 'TargetGroup',
@@ -211,24 +250,25 @@ def RequestCountPerTarget_metric(cloudwatch_client, tgstring, lbstring2, yesterd
                             },
                             {
                                 'Name': 'LoadBalancer',
-                                'Value': lbstring2
+                                'Value': lbstring
                             },
                         ]
                     },
-                    'Period': 300,
+                    'Period': 60,
                     'Stat': 'Sum',
                     'Unit': 'Count'
-                }
+                },
+                'ReturnData': True,
             },
         ],
-        StartTime=datetime(yesterday.year, yesterday.month, yesterday.day),
-        EndTime=datetime(tomorrow.year, tomorrow.month, tomorrow.day),
+        StartTime=StartTime,
+        EndTime=EndTime,
     )
 
     return response
 
 
-def TargetConnectionErrorCount_metric(cloudwatch_client, tgstring, lbstring2, yesterday, tomorrow):
+def TargetConnectionErrorCount_metric(cloudwatch_client, tgstring, lbstring, StartTime, EndTime):
     response = cloudwatch_client.get_metric_data(
         MetricDataQueries=[
             {
@@ -244,24 +284,25 @@ def TargetConnectionErrorCount_metric(cloudwatch_client, tgstring, lbstring2, ye
                             },
                             {
                                 'Name': 'LoadBalancer',
-                                'Value': lbstring2
+                                'Value': lbstring
                             },
                         ]
                     },
-                    'Period': 300,
+                    'Period': 60,
                     'Stat': 'Sum',
                     'Unit': 'Count'
-                }
+                },
+                'ReturnData': True,
             },
         ],
-        StartTime=datetime(yesterday.year, yesterday.month, yesterday.day),
-        EndTime=datetime(tomorrow.year, tomorrow.month, tomorrow.day),
+        StartTime=StartTime,
+        EndTime=EndTime,
     )
 
     return response
 
 
-def TargetResponseTime_metric(cloudwatch_client, tgstring, lbstring2, yesterday, tomorrow):
+def TargetResponseTime_metric(cloudwatch_client, tgstring, lbstring, StartTime, EndTime):
     response = cloudwatch_client.get_metric_data(
         MetricDataQueries=[
             {
@@ -277,24 +318,25 @@ def TargetResponseTime_metric(cloudwatch_client, tgstring, lbstring2, yesterday,
                             },
                             {
                                 'Name': 'LoadBalancer',
-                                'Value': lbstring2
+                                'Value': lbstring
                             },
                         ]
                     },
-                    'Period': 300,
+                    'Period': 60,
                     'Stat': 'Average',
                     'Unit': 'Count'
-                }
+                },
+                'ReturnData': True,
             },
         ],
-        StartTime=datetime(yesterday.year, yesterday.month, yesterday.day),
-        EndTime=datetime(tomorrow.year, tomorrow.month, tomorrow.day),
+        StartTime=StartTime,
+        EndTime=EndTime,
     )
 
     return response
 
 
-def UnHealthyHostCount_metric(cloudwatch_client, tgstring, lbstring2, yesterday, tomorrow):
+def UnHealthyHostCount_metric(cloudwatch_client, tgstring, lbstring, StartTime, EndTime):
     response = cloudwatch_client.get_metric_data(
         MetricDataQueries=[
             {
@@ -310,18 +352,19 @@ def UnHealthyHostCount_metric(cloudwatch_client, tgstring, lbstring2, yesterday,
                             },
                             {
                                 'Name': 'LoadBalancer',
-                                'Value': lbstring2
+                                'Value': lbstring
                             },
                         ]
                     },
-                    'Period': 300,
+                    'Period': 60,
                     'Stat': 'Average',
                     'Unit': 'Count'
-                }
+                },
+                'ReturnData': True,
             },
         ],
-        StartTime=datetime(yesterday.year, yesterday.month, yesterday.day),
-        EndTime=datetime(tomorrow.year, tomorrow.month, tomorrow.day),
+        StartTime=StartTime,
+        EndTime=EndTime,
     )
 
     return response
@@ -338,23 +381,27 @@ def load_balancer_metrics(cloudwatch, loadBalancerARN):
     lbarray2 = lbstring.split('/')
     lbstring2 = lbarray2[1] + '/' + lbarray2[2] + '/' + lbarray2[3]
 
-    yesterday = date.today() - timedelta(days=2)
-    tomorrow = date.today() + timedelta(days=2)
+    now = datetime.now(timezone.utc)
+    StartTime = datetime(now.year, now.month, now.day, now.hour - 1)
+    EndTime = datetime(now.year, now.month, now.day + 1, now.hour + 1)
 
-    data = ActiveConnectionCount_metric(cloudwatch, lbstring2=lbstring2, yesterday=yesterday, tomorrow=tomorrow)
-    save_data("Cloudwatch/Load_balancer/ActiveConnectionCount_metric.json", data)
+    data = RequestCount_metric(cloudwatch, lbstring=lbstring2, StartTime=StartTime, EndTime= EndTime)
+    save_data("cloudwatch/load_balancer/request_count_metric.json", data)
 
-    data = ConsumedLCUs_metric(cloudwatch, lbstring2=lbstring2, yesterday=yesterday, tomorrow=tomorrow)
-    save_data("Cloudwatch/Load_balancer/ConsumedLCUs_metric.json", data)
+    data = ActiveConnectionCount_metric(cloudwatch, lbstring=lbstring2,  StartTime=StartTime, EndTime= EndTime)
+    save_data("cloudwatch/load_balancer/active_connection_count_metric.json", data)
 
-    data = HTTP_Redirect_Count_metric(cloudwatch, lbstring2=lbstring2, yesterday=yesterday, tomorrow=tomorrow)
-    save_data("Cloudwatch/Load_balancer/HTTP_Redirect_Count_metric.json", data)
+    data = ConsumedLCUs_metric(cloudwatch, lbstring=lbstring2,  StartTime=StartTime, EndTime= EndTime)
+    save_data("cloudwatch/load_balancer/consumed_lcus_metric.json", data)
 
-    data = LB_RequestCount_metric(cloudwatch, lbstring2=lbstring2, yesterday=yesterday, tomorrow=tomorrow)
-    save_data("Cloudwatch/Load_balancer/RequestCount_metric.json", data)
+    data = HTTP_Redirect_Count_metric(cloudwatch, lbstring=lbstring2, StartTime=StartTime, EndTime= EndTime)
+    save_data("cloudwatch/load_balancer/http_redirect_count_metric.json", data)
 
-    data = RuleEvaluations_metric(cloudwatch, lbstring2=lbstring2, yesterday=yesterday, tomorrow=tomorrow)
-    save_data("Cloudwatch/Load_balancer/RuleEvaluations_metric.json", data)
+    data = LB_RequestCount_metric(cloudwatch, lbstring=lbstring2,  StartTime=StartTime, EndTime= EndTime)
+    save_data("cloudwatch/load_balancer/request_count_metric.json", data)
+
+    data = RuleEvaluations_metric(cloudwatch, lbstring=lbstring2,  StartTime=StartTime, EndTime= EndTime)
+    save_data("cloudwatch/load_balancer/rule_evaluations_metric.json", data)
 
     print("Saving Load balancer CloudWatch metrics is done ....")
 
@@ -370,28 +417,24 @@ def targets_metrics(cloudwatch, mytargetgrouparn, loadBalancerARN, target_grp_nu
     lbarray2 = lbstring.split('/')
     lbstring2 = lbarray2[1] + '/' + lbarray2[2] + '/' + lbarray2[3]
 
-    yesterday = date.today() - timedelta(days=2)
-    tomorrow = date.today() + timedelta(days=2)
+    now = datetime.now(timezone.utc)
+    StartTime = datetime(now.year, now.month, now.day, now.hour - 1)
+    EndTime = datetime(now.year, now.month, now.day, now.hour + 1)
 
-    data = HealthyHostCount_metric(cloudwatch, tgstring=tgstring, lbstring2=lbstring2, yesterday=yesterday,
-                                   tomorrow=tomorrow)
-    save_data("Cloudwatch/targets/target_grp_" + str(target_grp_number) + "/HealthyHostCount_metric.json", data)
+    data = HealthyHostCount_metric(cloudwatch, tgstring=tgstring, lbstring=lbstring2,  StartTime=StartTime, EndTime= EndTime)
+    save_data("cloudwatch/targets/target_grp_" + str(target_grp_number) + "/healthy_host_count_metric.json", data)
 
-    data = RequestCountPerTarget_metric(cloudwatch, tgstring=tgstring, lbstring2=lbstring2, yesterday=yesterday,
-                                        tomorrow=tomorrow)
-    save_data("Cloudwatch/targets/target_grp_" + str(target_grp_number) + "/RequestCountPerTarget_metric.json", data)
+    data = RequestCountPerTarget_metric(cloudwatch, tgstring=tgstring, lbstring=lbstring2,  StartTime=StartTime, EndTime= EndTime)
+    save_data("cloudwatch/targets/target_grp_" + str(target_grp_number) + "/request_count_per_target_metric.json", data)
 
-    data = TargetConnectionErrorCount_metric(cloudwatch, tgstring=tgstring, lbstring2=lbstring2, yesterday=yesterday,
-                                             tomorrow=tomorrow)
-    save_data("Cloudwatch/targets/target_grp_" + str(target_grp_number) + "/TargetConnectionErrorCount_metric.json",
+    data = TargetConnectionErrorCount_metric(cloudwatch, tgstring=tgstring, lbstring=lbstring2,  StartTime=StartTime, EndTime= EndTime)
+    save_data("cloudwatch/targets/target_grp_" + str(target_grp_number) + "/target_connection_error_count_metric.json",
               data)
 
-    data = TargetResponseTime_metric(cloudwatch, tgstring=tgstring, lbstring2=lbstring2, yesterday=yesterday,
-                                     tomorrow=tomorrow)
-    save_data("Cloudwatch/targets/target_grp_" + str(target_grp_number) + "/TargetResponseTime_metric.json", data)
+    data = TargetResponseTime_metric(cloudwatch, tgstring=tgstring, lbstring=lbstring2, StartTime=StartTime, EndTime= EndTime)
+    save_data("cloudwatch/targets/target_grp_" + str(target_grp_number) + "/target_response_time_metric.json", data)
 
-    data = UnHealthyHostCount_metric(cloudwatch, tgstring=tgstring, lbstring2=lbstring2, yesterday=yesterday,
-                                     tomorrow=tomorrow)
-    save_data("Cloudwatch/targets/target_grp_" + str(target_grp_number) + "/UnHealthyHostCount_metric.json", data)
+    data = UnHealthyHostCount_metric(cloudwatch, tgstring=tgstring, lbstring=lbstring2,  StartTime=StartTime, EndTime= EndTime)
+    save_data("cloudwatch/targets/target_grp_" + str(target_grp_number) + "/unhealthy_host_count_metric.json", data)
 
     print("Saving targets CloudWatch metrics is done ....")

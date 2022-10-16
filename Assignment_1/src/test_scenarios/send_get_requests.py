@@ -69,8 +69,9 @@ def main():
     print('--------------------')
 
     # URL list
-    urls = ["https://www.google.com/" for i in range(2)]
-
+    # urls = ["https://www.google.com/" for i in range(2)]
+    urls = ["http://log8415-lab1-elb-1921159422.us-east-1.elb.amazonaws.com/cluster1",
+            "http://log8415-lab1-elb-1921159422.us-east-1.elb.amazonaws.com/cluster2"]
     # headers
     headers = {"Content-Type": "application/json"}
 
