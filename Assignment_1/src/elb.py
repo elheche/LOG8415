@@ -1,4 +1,6 @@
 import sys
+from datetime import datetime
+from typing import Tuple, Dict, Union, List
 
 from mypy_boto3_elbv2 import ElasticLoadBalancingv2Client
 
@@ -51,7 +53,7 @@ def create_application_load_balancer(
         elbv2: ElasticLoadBalancingv2Client,
         subnets: list[str],
         security_group_ids: list[str]
-) -> str:
+) -> tuple[str, str]:
     try:
         print('Creating application load_balancer...')
         response = elbv2.create_load_balancer(
@@ -67,8 +69,9 @@ def create_application_load_balancer(
         sys.exit(1)
     else:
         alb_arn = response['LoadBalancers'][0]['LoadBalancerArn']
+        alb_dns_name = response['LoadBalancers'][0]['DNSName']
         print(f'Application load balancer created successfully.\n{alb_arn}')
-        return alb_arn
+        return alb_arn, alb_dns_name
 
 
 def create_alb_listener(

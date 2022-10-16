@@ -11,6 +11,7 @@ from init_aws_service import *
 from s3 import *
 from sts import *
 import sys
+from test_scenarios.send_get_requests import run_test_scenario_with_multithreading
 
 
 def main() -> None:
@@ -30,12 +31,17 @@ def main() -> None:
     sub_parser = parser.add_subparsers(title='aws arguments', dest='AWS')
     aws_parser = sub_parser.add_parser('aws')
 
-    parser.add_argument('-r', '--reset', help="reset user's aws account.", dest='RESET', required=False, action='store_true')
-    aws_parser.add_argument('-g', '--region', help='region name for your AWS account.', dest='AWS_REGION_NAME', required=True, nargs=1)
-    aws_parser.add_argument('-i', '--id', help='access key for your AWS account.', dest='AWS_ACCESS_KEY_ID', required=True, nargs=1)
-    aws_parser.add_argument('-s', '--secret', help='secret key for your AWS account.', dest='AWS_SECRET_ACCESS_KEY', required=True,
+    parser.add_argument('-r', '--reset', help="reset user's aws account.", dest='RESET', required=False,
+                        action='store_true')
+    aws_parser.add_argument('-g', '--region', help='region name for your AWS account.', dest='AWS_REGION_NAME',
+                            required=True, nargs=1)
+    aws_parser.add_argument('-i', '--id', help='access key for your AWS account.', dest='AWS_ACCESS_KEY_ID',
+                            required=True, nargs=1)
+    aws_parser.add_argument('-s', '--secret', help='secret key for your AWS account.', dest='AWS_SECRET_ACCESS_KEY',
+                            required=True,
                             nargs=1)
-    aws_parser.add_argument('-t', '--token', help='session key for your AWS account.', dest='AWS_SESSION_TOKEN', required=True, nargs=1)
+    aws_parser.add_argument('-t', '--token', help='session key for your AWS account.', dest='AWS_SESSION_TOKEN',
+                            required=True, nargs=1)
 
     args = parser.parse_args()
 
@@ -141,8 +147,9 @@ def main() -> None:
     register_targets(elbv2, target_group_arn_2, ec2_instance_ids_2)
 
     # Create an application load balancer
-    subnet_ids = get_subnet_ids(ec2, vpc_id, [EC2_CONFIG['Cluster1']['AvailabilityZone'], EC2_CONFIG['Cluster2']['AvailabilityZone']])
-    alb_arn = create_application_load_balancer(elbv2, subnet_ids, [security_group_id])
+    subnet_ids = get_subnet_ids(ec2, vpc_id, [EC2_CONFIG['Cluster1']['AvailabilityZone'],
+                                              EC2_CONFIG['Cluster2']['AvailabilityZone']])
+    alb_arn, alb_dns_name = create_application_load_balancer(elbv2, subnet_ids, [security_group_id])
 
     # Save alb arn to aws_data (needed to reset aws account)
     aws_data['AlbArn'] = alb_arn
@@ -241,7 +248,6 @@ def main() -> None:
                 'MaxAttempts': 120
             }
         )
-        print("deployment done successfully ...")
     except WaiterError as e:
         print(e)
     except Exception as e:
@@ -263,6 +269,21 @@ def main() -> None:
             print(e)
         else:
             print("deployment done successfully ...")
+
+    # Running Test scenario for Cluster 1
+
+    print("Performing test scenarios ...")
+    _, time_cluster_1 = run_test_scenario_with_multithreading(scenarios=[1, 2],
+                                                              url="http://" + alb_dns_name + "/cluster1",
+                                                              headers={"Content-Type": "application/json"})
+
+    # Running Test scenario for Cluster 2
+    _, time_cluster_2 = run_test_scenario_with_multithreading(scenarios=[1, 2],
+                                                              url="http://" + alb_dns_name + "/cluster2",
+                                                              headers={"Content-Type": "application/json"})
+
+    print("test_scenario for Cluster 1 done in ", time_cluster_1, "seconds")
+    print("test_scenario for Cluster 1 done in ", time_cluster_2, "seconds")
 
     ###################################################################################################################
     #                                             Getting CloudWatch Metrics
