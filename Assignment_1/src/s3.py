@@ -1,36 +1,41 @@
 import json
 import shutil
 import sys
-
+from datetime import datetime
 from mypy_boto3_s3 import S3Client
 
 
-def create_bucket(s3: S3Client, bucket: str) -> None:
+def create_bucket(s3: S3Client, bucket: str) -> str:
+    timestamp = str(int(datetime.timestamp(datetime.now())))
     try:
         print('Creating an S3 bucket...')
-        s3.create_bucket(Bucket=bucket)
+        response = s3.create_bucket(Bucket=bucket + timestamp)
     except Exception as e:
         print(e)
         sys.exit(1)
     else:
-        print(f'S3 bucket created successfully.\n{bucket}')
+        bucket_name = response['Location'][1:]
+        print(f'S3 bucket created successfully.\n{bucket_name}')
+        return bucket_name
 
 
-def put_bucket_policy(s3: S3Client, s3_config: dict, aws_user_account: str, role_arn) -> None:
+def put_bucket_policy(s3: S3Client, s3_config: dict, bucket: str, aws_user_account: str, role_arn) -> None:
     bucket_policy = s3_config['BucketPolicy']
     bucket_policy['Statement'][0]['Principal'] = {"AWS": [aws_user_account]}
+    bucket_policy['Statement'][0]['Resource'] = f'arn:aws:s3:::{bucket}/*'
     bucket_policy['Statement'][1]['Principal'] = {"AWS": [role_arn]}
+    bucket_policy['Statement'][1]['Resource'] = f'arn:aws:s3:::{bucket}/*'
     try:
         print('Applying a policy to an S3 Bucket...')
         s3.put_bucket_policy(
-            Bucket=s3_config['Bucket'],
+            Bucket=bucket,
             Policy=json.dumps(bucket_policy)
         )
     except Exception as e:
         print(e)
         sys.exit(1)
     else:
-        print(f'Policy successfully applied to bucket {s3_config["Bucket"]}')
+        print(f'Policy successfully applied to bucket {bucket}')
 
 
 def upload_server_app_to_s3_bucket(s3: S3Client, bucket: str) -> None:

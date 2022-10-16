@@ -40,14 +40,16 @@ def create_deployment_group(code_deploy: CodeDeployClient, code_deploy_config: d
         return deployment_group_id
 
 
-def create_deployment(code_deploy: CodeDeployClient, code_deploy_config: dict) -> str:
+def create_deployment(code_deploy: CodeDeployClient, bucket: str, code_deploy_config: dict) -> str:
+    revision = code_deploy_config['Revision']
+    revision['s3Location']['bucket'] = bucket
     try:
         print('Launching application deployment...')
         response = code_deploy.create_deployment(
             description=f'Deploy a simple flask server to {code_deploy_config["DeploymentGroupName"]}',
             applicationName=code_deploy_config['ApplicationName'],
             deploymentGroupName=code_deploy_config['DeploymentGroupName'],
-            revision=code_deploy_config['Revision']
+            revision=revision
         )
     except Exception as e:
         print(e)

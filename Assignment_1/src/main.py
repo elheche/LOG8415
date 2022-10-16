@@ -31,17 +31,11 @@ def main() -> None:
     sub_parser = parser.add_subparsers(title='aws arguments', dest='AWS')
     aws_parser = sub_parser.add_parser('aws')
 
-    parser.add_argument('-r', '--reset', help="reset user's aws account.", dest='RESET', required=False,
-                        action='store_true')
-    aws_parser.add_argument('-g', '--region', help='region name for your AWS account.', dest='AWS_REGION_NAME',
-                            required=True, nargs=1)
-    aws_parser.add_argument('-i', '--id', help='access key for your AWS account.', dest='AWS_ACCESS_KEY_ID',
-                            required=True, nargs=1)
-    aws_parser.add_argument('-s', '--secret', help='secret key for your AWS account.', dest='AWS_SECRET_ACCESS_KEY',
-                            required=True,
-                            nargs=1)
-    aws_parser.add_argument('-t', '--token', help='session key for your AWS account.', dest='AWS_SESSION_TOKEN',
-                            required=True, nargs=1)
+    parser.add_argument('-r', '--reset', help="reset user's aws account.", dest='RESET', required=False, action='store_true')
+    aws_parser.add_argument('-g', '--region', help='region name for your AWS account.', dest='AWS_REGION_NAME', required=True, nargs=1)
+    aws_parser.add_argument('-i', '--id', help='access key for your AWS account.', dest='AWS_ACCESS_KEY_ID', required=True, nargs=1)
+    aws_parser.add_argument('-s', '--secret', help='secret key for your AWS account.', dest='AWS_SECRET_ACCESS_KEY', required=True, nargs=1)
+    aws_parser.add_argument('-t', '--token', help='session key for your AWS account.', dest='AWS_SESSION_TOKEN', required=True, nargs=1)
 
     args = parser.parse_args()
 
@@ -147,8 +141,7 @@ def main() -> None:
     register_targets(elbv2, target_group_arn_2, ec2_instance_ids_2)
 
     # Create an application load balancer
-    subnet_ids = get_subnet_ids(ec2, vpc_id, [EC2_CONFIG['Cluster1']['AvailabilityZone'],
-                                              EC2_CONFIG['Cluster2']['AvailabilityZone']])
+    subnet_ids = get_subnet_ids(ec2, vpc_id, [EC2_CONFIG['Cluster1']['AvailabilityZone'], EC2_CONFIG['Cluster2']['AvailabilityZone']])
     alb_arn, alb_dns_name = create_application_load_balancer(elbv2, subnet_ids, [security_group_id])
 
     # Save alb arn to aws_data (needed to reset aws account)
@@ -189,16 +182,16 @@ def main() -> None:
     aws_user_account = get_aws_user_account(sts)
 
     # Create an S3 bucket
-    create_bucket(s3, S3_CONFIG['Common']['Bucket'])
+    bucket = create_bucket(s3, S3_CONFIG['Common']['Bucket'])
 
     # Save bucket name to aws_data (needed to reset aws account)
-    aws_data['Bucket'] = S3_CONFIG['Common']['Bucket']
+    aws_data['Bucket'] = bucket
 
     # Set bucket policies (give user and CodeDeploy access to bucket)
-    put_bucket_policy(s3, S3_CONFIG['Common'], aws_user_account, role_arn)
+    put_bucket_policy(s3, S3_CONFIG['Common'], bucket, aws_user_account, role_arn)
 
     # Upload the server app to the created bucket
-    upload_server_app_to_s3_bucket(s3, S3_CONFIG['Common']['Bucket'])
+    upload_server_app_to_s3_bucket(s3, bucket)
 
     # Create an application to deploy to Cluster1 and Cluster2
     create_application(code_deploy, CODE_DEPLOY_CONFIG['Common']['ApplicationName'])
@@ -222,11 +215,13 @@ def main() -> None:
     # Launch two app deployments, the first deploys to Cluster1, the second deploys to Cluster2
     deployment_id_cluster_1 = create_deployment(
         code_deploy,
+        bucket,
         CODE_DEPLOY_CONFIG['Common'] | CODE_DEPLOY_CONFIG['Cluster1']
     )
 
     deployment_id_cluster_2 = create_deployment(
         code_deploy,
+        bucket,
         CODE_DEPLOY_CONFIG['Common'] | CODE_DEPLOY_CONFIG['Cluster2']
     )
 
@@ -252,9 +247,7 @@ def main() -> None:
         print(e)
     except Exception as e:
         print(e)
-
     else:
-
         try:
             code_deploy_waiter.wait(
                 deploymentId=deployment_id_cluster_2,

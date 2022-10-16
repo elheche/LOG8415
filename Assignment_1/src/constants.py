@@ -71,7 +71,6 @@ CODE_DEPLOY_CONFIG = {
         'Revision': {
             'revisionType': 'S3',
             's3Location': {
-                'bucket': 'log8415-lab1-bucket',
                 'key': 'server.zip',
                 'bundleType': 'zip',
             }
@@ -109,13 +108,12 @@ IAM_CONFIG = {
 S3_CONFIG = {
     'Common': {
         'ServiceName': 's3',
-        'Bucket': 'log8415-lab1-bucket',
+        'Bucket': 'log8415-lab1-bucket-',
         'BucketPolicy': {
             "Statement": [
                 {
                     "Action": ["s3:PutObject"],
                     "Effect": "Allow",
-                    "Resource": f"arn:aws:s3:::log8415-lab1-bucket/*",
                 },
                 {
                     "Action": [
@@ -123,7 +121,6 @@ S3_CONFIG = {
                         "s3:List*"
                     ],
                     "Effect": "Allow",
-                    "Resource": f"arn:aws:s3:::log8415-lab1-bucket/*",
                 }
             ]
         }
