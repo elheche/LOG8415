@@ -1,0 +1,24 @@
+{
+    "Messages": [],
+    "MetricDataResults": [
+        {
+            "Id": "myrequest_TargetResponseTime",
+            "Label": "TargetResponseTime",
+            "StatusCode": "Complete",
+            "Timestamps": [],
+            "Values": []
+        }
+    ],
+    "ResponseMetadata": {
+        "HTTPHeaders": {
+            "connection": "close",
+            "content-length": "527",
+            "content-type": "text/xml",
+            "date": "Sun, 16 Oct 2022 06:08:54 GMT",
+            "x-amzn-requestid": "efa65359-17bd-4998-a881-aa06e3951086"
+        },
+        "HTTPStatusCode": 200,
+        "RequestId": "efa65359-17bd-4998-a881-aa06e3951086",
+        "RetryAttempts": 0
+    }
+}

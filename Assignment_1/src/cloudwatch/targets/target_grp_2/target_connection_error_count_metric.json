@@ -1,0 +1,23 @@
+{
+    "Messages": [],
+    "MetricDataResults": [
+        {
+            "Id": "myrequest_TargetConnectionErrorCount",
+            "Label": "TargetConnectionErrorCount",
+            "StatusCode": "Complete",
+            "Timestamps": [],
+            "Values": []
+        }
+    ],
+    "ResponseMetadata": {
+        "HTTPHeaders": {
+            "content-length": "543",
+            "content-type": "text/xml",
+            "date": "Sun, 16 Oct 2022 06:08:56 GMT",
+            "x-amzn-requestid": "dbef24c5-fe03-4c56-9cc1-54af3730607f"
+        },
+        "HTTPStatusCode": 200,
+        "RequestId": "dbef24c5-fe03-4c56-9cc1-54af3730607f",
+        "RetryAttempts": 0
+    }
+}

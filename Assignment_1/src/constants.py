@@ -109,13 +109,13 @@ IAM_CONFIG = {
 S3_CONFIG = {
     'Common': {
         'ServiceName': 's3',
-        'Bucket': 'log8415-lab1-bucket',
+        'Bucket': 'log8415-lab1-bucket-ahmed',
         'BucketPolicy': {
             "Statement": [
                 {
                     "Action": ["s3:PutObject"],
                     "Effect": "Allow",
-                    "Resource": f"arn:aws:s3:::log8415-lab1-bucket/*",
+                    "Resource": f"arn:aws:s3:::log8415-lab1-bucket-ahmed/*",
                 },
                 {
                     "Action": [
@@ -123,7 +123,7 @@ S3_CONFIG = {
                         "s3:List*"
                     ],
                     "Effect": "Allow",
-                    "Resource": f"arn:aws:s3:::log8415-lab1-bucket/*",
+                    "Resource": f"arn:aws:s3:::log8415-lab1-bucket-ahmed/*",
                 }
             ]
         }

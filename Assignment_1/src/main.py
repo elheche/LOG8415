@@ -230,7 +230,39 @@ def main() -> None:
     #                                             Code to Run Docker Image to Request Clusters
     ###################################################################################################################
 
+    code_deploy_waiter = code_deploy.get_waiter('deployment_successful')
 
+    try:
+        print("deployment in progress ...")
+        code_deploy_waiter.wait(
+            deploymentId=deployment_id_cluster_1,
+            WaiterConfig={
+                'Delay': 15,
+                'MaxAttempts': 120
+            }
+        )
+        print("deployment done successfully ...")
+    except WaiterError as e:
+        print(e)
+    except Exception as e:
+        print(e)
+
+    else:
+
+        try:
+            code_deploy_waiter.wait(
+                deploymentId=deployment_id_cluster_2,
+                WaiterConfig={
+                    'Delay': 15,
+                    'MaxAttempts': 120
+                }
+            )
+        except WaiterError as e:
+            print(e)
+        except Exception as e:
+            print(e)
+        else:
+            print("deployment done successfully ...")
 
     ###################################################################################################################
     #                                             Getting CloudWatch Metrics

@@ -1,0 +1,23 @@
+{
+    "Messages": [],
+    "MetricDataResults": [
+        {
+            "Id": "myrequest_ConsumedLCUs",
+            "Label": "ConsumedLCUs",
+            "StatusCode": "Complete",
+            "Timestamps": [],
+            "Values": []
+        }
+    ],
+    "ResponseMetadata": {
+        "HTTPHeaders": {
+            "content-length": "515",
+            "content-type": "text/xml",
+            "date": "Sun, 16 Oct 2022 06:08:54 GMT",
+            "x-amzn-requestid": "bee6d8fa-33f6-46d2-9642-0be9e1fd4a61"
+        },
+        "HTTPStatusCode": 200,
+        "RequestId": "bee6d8fa-33f6-46d2-9642-0be9e1fd4a61",
+        "RetryAttempts": 0
+    }
+}

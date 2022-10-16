@@ -1,0 +1,29 @@
+{
+    "Messages": [],
+    "MetricDataResults": [
+        {
+            "Id": "myrequest_UnHealthyHostCount",
+            "Label": "UnHealthyHostCount",
+            "StatusCode": "Complete",
+            "Timestamps": [
+                "2022-10-16 06:07:00+00:00",
+                "2022-10-16 06:06:00+00:00"
+            ],
+            "Values": [
+                5.0,
+                5.0
+            ]
+        }
+    ],
+    "ResponseMetadata": {
+        "HTTPHeaders": {
+            "content-length": "723",
+            "content-type": "text/xml",
+            "date": "Sun, 16 Oct 2022 06:08:58 GMT",
+            "x-amzn-requestid": "b101edaa-62c2-4335-aee7-eb214b0a0786"
+        },
+        "HTTPStatusCode": 200,
+        "RequestId": "b101edaa-62c2-4335-aee7-eb214b0a0786",
+        "RetryAttempts": 0
+    }
+}
