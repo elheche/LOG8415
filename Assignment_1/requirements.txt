@@ -1,6 +1,10 @@
 boto3~=1.24.84
 mypy-boto3-ec2
 mypy_boto3_elbv2
+mypy_boto3_codedeploy
+mypy_boto3_iam
+mypy_boto3_s3
+mypy_boto3_sts
 # a nice package to interact with aws cli
 aws-shell
 requests

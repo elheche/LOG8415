@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-
+from botocore.exceptions import WaiterError
 from cloudWatch import *
 from code_deploy import *
 from constants import *
@@ -213,12 +213,12 @@ def main() -> None:
     )
 
     # Launch two app deployments, the first deploys to Cluster1, the second deploys to Cluster2
-    create_deployment(
+    deployment_id_cluster_1 = create_deployment(
         code_deploy,
         CODE_DEPLOY_CONFIG['Common'] | CODE_DEPLOY_CONFIG['Cluster1']
     )
 
-    create_deployment(
+    deployment_id_cluster_2 = create_deployment(
         code_deploy,
         CODE_DEPLOY_CONFIG['Common'] | CODE_DEPLOY_CONFIG['Cluster2']
     )
@@ -230,7 +230,7 @@ def main() -> None:
     #                                             Code to Run Docker Image to Request Clusters
     ###################################################################################################################
 
-    # Put code here
+
 
     ###################################################################################################################
     #                                             Getting CloudWatch Metrics
