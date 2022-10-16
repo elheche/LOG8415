@@ -214,7 +214,7 @@ def ProcessedBytes_metric(cloudwatch_client, lbstring, StartTime, EndTime):
                     },
                     'Period': 60,
                     'Stat': 'Sum',
-                    'Unit': 'Count'
+                    'Unit': 'Bytes'
                 },
                 'ReturnData': True,
             },
