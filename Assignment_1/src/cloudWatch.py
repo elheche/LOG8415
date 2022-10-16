@@ -384,7 +384,7 @@ def TargetResponseTime_metric(cloudwatch_client, tgstring, lbstring, StartTime, 
                     },
                     'Period': 60,
                     'Stat': 'Average',
-                    'Unit': 'Count'
+                    'Unit': 'Seconds'
                 },
                 'ReturnData': True,
             },
