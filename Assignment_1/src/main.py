@@ -280,7 +280,7 @@ def main() -> None:
 
         docker_client = docker.from_env()
         print("Building docker image ...")
-        docker_client.images.build(path="./", tag="log8415-test-scenarios")
+        docker_client.images.build(path="./test_scenarios", tag="log8415-test-scenarios")
         print("Running docker container ...")
         container_output = docker_client.containers.run("log8415-test-scenarios")
         print(container_output)
