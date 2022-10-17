@@ -12,6 +12,7 @@ from s3 import *
 from sts import *
 import sys
 from test_scenarios.send_get_requests import run_test_scenario_with_multithreading
+import docker
 
 
 def main() -> None:
@@ -32,6 +33,8 @@ def main() -> None:
     aws_parser = sub_parser.add_parser('aws')
 
     parser.add_argument('-r', '--reset', help="reset user's aws account.", dest='RESET', required=False, action='store_true')
+    parser.add_argument('-d', '--docker', help="enable test scenarios through docker.", dest='DOCKER', required=False,
+                        action='store_true')
     aws_parser.add_argument('-g', '--region', help='region name for your AWS account.', dest='AWS_REGION_NAME', required=True, nargs=1)
     aws_parser.add_argument('-i', '--id', help='access key for your AWS account.', dest='AWS_ACCESS_KEY_ID', required=True, nargs=1)
     aws_parser.add_argument('-s', '--secret', help='secret key for your AWS account.', dest='AWS_SECRET_ACCESS_KEY', required=True, nargs=1)
@@ -263,20 +266,40 @@ def main() -> None:
         else:
             print("deployment done successfully ...")
 
-    # Running Test scenario for Cluster 1
+    if args.DOCKER:
+        # Running Test scenario for Cluster 1
 
-    print("Performing test scenarios ...")
-    _, time_cluster_1 = run_test_scenario_with_multithreading(scenarios=[1, 2],
-                                                              url="http://" + alb_dns_name + "/cluster1",
-                                                              headers={"Content-Type": "application/json"})
+        print("Performing test scenarios ...")
+        print("Creating Dockerfile ...")
+        f = open("./test_scenarios/Dockerfile", "w")
+        f.write("FROM python:3 \n")
+        f.write("ADD send_get_requests.py / \n")
+        f.write("RUN pip install requests \n")
+        f.write(f'CMD [ "python", "./send_get_requests.py", "--dns",  "{alb_dns_name}"] \n')
+        f.close()
 
-    # Running Test scenario for Cluster 2
-    _, time_cluster_2 = run_test_scenario_with_multithreading(scenarios=[1, 2],
-                                                              url="http://" + alb_dns_name + "/cluster2",
-                                                              headers={"Content-Type": "application/json"})
+        docker_client = docker.from_env()
+        print("Building docker image ...")
+        docker_client.images.build(path="./", tag="log8415-test-scenarios")
+        print("Running docker container ...")
+        container_output = docker_client.containers.run("log8415-test-scenarios")
+        print(container_output)
+    else:
 
-    print("test_scenario for Cluster 1 done in ", time_cluster_1, "seconds")
-    print("test_scenario for Cluster 1 done in ", time_cluster_2, "seconds")
+        # Running Test scenario for Cluster 1
+
+        print("Performing test scenarios ...")
+        _, time_cluster_1 = run_test_scenario_with_multithreading(scenarios=[1, 2],
+                                                                  url="http://" + alb_dns_name + "/cluster1",
+                                                                  headers={"Content-Type": "application/json"})
+
+        # Running Test scenario for Cluster 2
+        _, time_cluster_2 = run_test_scenario_with_multithreading(scenarios=[1, 2],
+                                                                  url="http://" + alb_dns_name + "/cluster2",
+                                                                  headers={"Content-Type": "application/json"})
+
+        print("test_scenario for Cluster 1 done in ", time_cluster_1, "seconds")
+        print("test_scenario for Cluster 1 done in ", time_cluster_2, "seconds")
 
     ###################################################################################################################
     #                                             Getting CloudWatch Metrics

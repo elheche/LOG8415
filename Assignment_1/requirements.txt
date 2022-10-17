@@ -9,3 +9,4 @@ mypy_boto3_sts
 aws-shell
 requests
 Flask~=2.2.2
+docker

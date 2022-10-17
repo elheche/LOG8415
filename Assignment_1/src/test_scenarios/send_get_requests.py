@@ -4,6 +4,7 @@ from typing import Literal
 from typing import Dict, Any, List
 from concurrent.futures import ThreadPoolExecutor
 from itertools import repeat
+import argparse
 
 
 def http_get(
@@ -66,22 +67,24 @@ def run_test_scenario_with_multithreading(
 
 
 def main():
-    print('--------------------')
+    parser = argparse.ArgumentParser()
 
-    # URL list
-    # urls = ["https://www.google.com/" for i in range(2)]
-    urls = ["http://log8415-lab1-elb-1921159422.us-east-1.elb.amazonaws.com/cluster1",
-            "http://log8415-lab1-elb-1921159422.us-east-1.elb.amazonaws.com/cluster2"]
-    # headers
-    headers = {"Content-Type": "application/json"}
+    parser.add_argument('-d', '--dns', help='elb dns.', dest='DNS', required=True, type=str)
 
-    # Running Test scenario for Cluster 1
-    results_cluster_1, time_cluster_1 = run_test_scenario_with_multithreading(scenarios=[1, 2], url=urls[0],
-                                                                              headers=headers)
+    args = parser.parse_args()
+
+    print("Performing test scenarios ...")
+    _, time_cluster_1 = run_test_scenario_with_multithreading(scenarios=[1, 2],
+                                                              url="http://" + args.DNS + "/cluster1",
+                                                              headers={"Content-Type": "application/json"})
 
     # Running Test scenario for Cluster 2
-    results_cluster_2, time_cluster_2 = run_test_scenario_with_multithreading(scenarios=[1, 2], url=urls[1],
-                                                                              headers=headers)
+    _, time_cluster_2 = run_test_scenario_with_multithreading(scenarios=[1, 2],
+                                                              url="http://" + args.DNS + "/cluster2",
+                                                              headers={"Content-Type": "application/json"})
+
+    print("test_scenario for Cluster 1 done in ", time_cluster_1, "seconds")
+    print("test_scenario for Cluster 1 done in ", time_cluster_2, "seconds")
 
 
 if __name__ == "__main__":
