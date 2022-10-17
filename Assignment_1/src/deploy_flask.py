@@ -25,24 +25,6 @@ def get_all_instance_ip() -> list:
     return public_dns_ip
 
 
-# def ssh_connect_with_retry(ssh, ip_address, retries):
-#     if retries > 3:
-#         return False
-#     privkey = paramiko.RSAKey.from_private_key_file(
-#         './config/image_rec_auth.pem')
-#     interval = 5
-#     try:
-#         retries += 1
-#         print('SSH into the instance: {}'.format(ip_address))
-#         ssh.connect(hostname=ip_address,
-#                     username='ubuntu', pkey=privkey)
-#         return True
-#     except Exception as e:
-#         print(e)
-#         time.sleep(interval)
-#         print('Retrying SSH connection to {}'.format(ip_address))
-#         ssh_connect_with_retry(ssh, ip_address, retries)
-
 def ssh_connexion(ssh, instance_ip, retries) -> None:
     if retries > 3:
         return False
