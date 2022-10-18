@@ -442,8 +442,8 @@ def load_balancer_metrics(cloudwatch, loadBalancerARN):
     lbstring2 = lbarray2[1] + '/' + lbarray2[2] + '/' + lbarray2[3]
 
     now = datetime.now(timezone.utc)
-    StartTime = datetime(now.year, now.month, now.day, now.hour - 1)
-    EndTime = datetime(now.year, now.month, now.day + 1, now.hour + 1)
+    StartTime = datetime(now.year, now.month, now.day - 1)
+    EndTime = datetime(now.year, now.month, now.day + 1)
 
     data = RequestCount_metric(cloudwatch, lbstring=lbstring2, StartTime=StartTime, EndTime=EndTime)
     save_data("cloudwatch/load_balancer/request_count_metric.json", data)
@@ -484,8 +484,8 @@ def targets_metrics(cloudwatch, mytargetgrouparn, loadBalancerARN, target_grp_nu
     lbstring2 = lbarray2[1] + '/' + lbarray2[2] + '/' + lbarray2[3]
 
     now = datetime.now(timezone.utc)
-    StartTime = datetime(now.year, now.month, now.day, now.hour - 1)
-    EndTime = datetime(now.year, now.month, now.day, now.hour + 1)
+    StartTime = datetime(now.year, now.month, now.day - 1)
+    EndTime = datetime(now.year, now.month, now.day + 1)
 
     data = HealthyHostCount_metric(cloudwatch, tgstring=tgstring, lbstring=lbstring2, StartTime=StartTime,
                                    EndTime=EndTime)

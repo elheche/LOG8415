@@ -92,7 +92,7 @@ def main() -> None:
     #                                    Creating and Configuring Clusters & Load Balancer
     ###################################################################################################################
 
-    # TODO: Do we need to create a VPC specific to this assignment or using the default one ?
+    # Get the default vpc id
     vpc_id = get_vpc_id(ec2)
 
     # We'll use LabRole (a default role) since we can't create a new one (needed to give permissions to CodeDeploy).
@@ -267,7 +267,7 @@ def main() -> None:
             print("deployment done successfully ...")
 
     if args.DOCKER:
-        # Running Test scenario for Cluster 1
+        # Running Test scenario for Cluster 1 and Cluster 2 through Docker
 
         print("Performing test scenarios ...")
         print("Creating Dockerfile ...")
@@ -286,14 +286,14 @@ def main() -> None:
         print(container_output)
     else:
 
-        # Running Test scenario for Cluster 1
+        # Running Test scenario for Cluster 1 without Docker
 
         print("Performing test scenarios ...")
         _, time_cluster_1 = run_test_scenario_with_multithreading(scenarios=[1, 2],
                                                                   url="http://" + alb_dns_name + "/cluster1",
                                                                   headers={"Content-Type": "application/json"})
 
-        # Running Test scenario for Cluster 2
+        # Running Test scenario for Cluster 2 without Docker
         _, time_cluster_2 = run_test_scenario_with_multithreading(scenarios=[1, 2],
                                                                   url="http://" + alb_dns_name + "/cluster2",
                                                                   headers={"Content-Type": "application/json"})
